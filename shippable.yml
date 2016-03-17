@@ -20,13 +20,13 @@ before_install:
   - update-alternatives --set java $java_path
   - java -version
 # Install the required Ant and Maven version
-  - shippable_retry sudo apt-get -q -y -f update
+  - shippable_retry sudo apt-get -q -y update
   - shippable_retry sudo apt-get -y install maven
   - shippable_retry wget "https://raw.githubusercontent.com/optimizationBenchmarking/utils-build/master/antWebInstallerLinux.sh"
   - chmod 755 antWebInstallerLinux.sh
   - shippable_retry sudo ./antWebInstallerLinux.sh --purgeAnt=false
 # installing R and required packages
-  - shippable_retry sudo apt-get -q -y -f install r-base r-base-dev
+  - shippable_retry sudo apt-get -q -y install r-base r-base-dev
   - sudo Rscript -e 'if(!(require("vegan"))) install.packages("vegan", repos="http://cran.us.r-project.org", dependencies=TRUE, clean=TRUE)'
   - sudo Rscript -e 'if(!(require("cluster"))) install.packages("cluster", repos="http://cran.us.r-project.org", dependencies=TRUE, clean=TRUE)'
   - sudo Rscript -e 'if(!(require("fpc"))) install.packages("fpc", repos="http://cran.us.r-project.org", dependencies=TRUE, clean=TRUE)'
