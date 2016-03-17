@@ -1,0 +1,24 @@
+<project basedir="." default="build">
+	<description>
+	Build the evaluator-modules project, the project holding the
+  basic modules of the evaluator.
+	</description>
+
+	<import>
+		<url url="https://raw.githubusercontent.com/optimizationBenchmarking/utils-build/master/dependencyBuilder.xml" />
+	</import>
+
+	<target name="build">
+		<sequential>
+			<buildWithDependencies githubProject="evaluator-modules">
+				<dependencies>
+				  <dependency githubProject="evaluator-attributes" />
+					<dependency githubProject="evaluator-base" />
+					<dependency githubProject="utils-base" />
+					<dependency githubProject="utils-math" />
+					<dependency githubProject="utils-ml" />
+				</dependencies>
+			</buildWithDependencies>
+		</sequential>
+	</target>
+</project>

@@ -1,0 +1,49 @@
+##
+## Build with Shippable
+##
+## https://app.shippable.com/projects/ TODO
+#
+#
+language: java
+#
+jdk:
+  - openjdk7
+  - oraclejdk7
+  - oraclejdk8
+#
+# install maven
+before_install:
+  - if [[ $SHIPPABLE_JDK_VERSION == "openjdk7" ]] ; then export JAVA_HOME="/usr/lib/jvm/java-7-openjdk-amd64"; export PATH="$PATH:/usr/lib/jvm/java-7-openjdk-amd64/bin"; export java_path="/usr/lib/jvm/java-7-openjdk-amd64/jre/bin/java"; fi
+  - if [[ $SHIPPABLE_JDK_VERSION == "oraclejdk7" ]] ; then export JAVA_HOME="/usr/lib/jvm/java-7-oracle"; export PATH="$PATH:/usr/lib/jvm/java-7-oracle/bin"; export java_path="/usr/lib/jvm/java-7-oracle/jre/bin/java"; fi
+  - if [[ $SHIPPABLE_JDK_VERSION == "openjdk6" ]] ; then export JAVA_HOME="/usr/lib/jvm/java-6-openjdk-amd64"; export PATH="$PATH:/usr/lib/jvm/java-6-openjdk-amd64/bin"; export java_path="/usr/lib/jvm/java-6-openjdk-amd64/jre/bin/java"; fi
+  - if [[ $SHIPPABLE_JDK_VERSION == "oraclejdk8" ]] ; then export JAVA_HOME="/usr/lib/jvm/java-8-oracle"; export PATH="$PATH:/usr/lib/jvm/java-8-oracle/bin"; export java_path="/usr/lib/jvm/java-8-oracle/jre/bin/java"; fi
+  - update-alternatives --set java $java_path
+  - java -version
+# Install the required Ant and Maven version
+  - shippable_retry sudo apt-get -q -y -f update
+  - shippable_retry sudo apt-get -y install maven
+  - shippable_retry wget "https://raw.githubusercontent.com/optimizationBenchmarking/utils-build/master/antWebInstallerLinux.sh"
+  - chmod 755 antWebInstallerLinux.sh
+  - shippable_retry sudo ./antWebInstallerLinux.sh --purgeAnt=false
+# installing R and required packages
+  - shippable_retry sudo apt-get -q -y -f install r-base r-base-dev
+  - sudo Rscript -e 'if(!(require("vegan"))) install.packages("vegan", repos="http://cran.us.r-project.org", dependencies=TRUE, clean=TRUE)'
+  - sudo Rscript -e 'if(!(require("cluster"))) install.packages("cluster", repos="http://cran.us.r-project.org", dependencies=TRUE, clean=TRUE)'
+  - sudo Rscript -e 'if(!(require("fpc"))) install.packages("fpc", repos="http://cran.us.r-project.org", dependencies=TRUE, clean=TRUE)'
+  - sudo Rscript -e 'if(!(require("NbClust"))) install.packages("NbClust", repos="http://cran.us.r-project.org", dependencies=TRUE, clean=TRUE)'
+  - sudo Rscript -e 'if(!(require("mclust"))) install.packages("mclust", repos="http://cran.us.r-project.org", dependencies=TRUE, clean=TRUE)'
+  - sudo Rscript -e 'if(!(require("stats"))) install.packages("stats", repos="http://cran.us.r-project.org", dependencies=TRUE, clean=TRUE)'
+  - sudo Rscript -e 'if(!(require("apcluster"))) install.packages("apcluster", repos="http://cran.us.r-project.org", dependencies=TRUE, clean=TRUE)'
+  
+# install override
+install:
+  - echo "Nothing to do here."
+#
+script:
+  - if [[ $SHIPPABLE_JDK_VERSION == "openjdk7" ]] ; then export JAVA_HOME="/usr/lib/jvm/java-7-openjdk-amd64"; export PATH="$PATH:/usr/lib/jvm/java-7-openjdk-amd64/bin"; export java_path="/usr/lib/jvm/java-7-openjdk-amd64/jre/bin/java"; fi
+  - if [[ $SHIPPABLE_JDK_VERSION == "oraclejdk7" ]] ; then export JAVA_HOME="/usr/lib/jvm/java-7-oracle"; export PATH="$PATH:/usr/lib/jvm/java-7-oracle/bin"; export java_path="/usr/lib/jvm/java-7-oracle/jre/bin/java"; fi
+  - if [[ $SHIPPABLE_JDK_VERSION == "openjdk6" ]] ; then export JAVA_HOME="/usr/lib/jvm/java-6-openjdk-amd64"; export PATH="$PATH:/usr/lib/jvm/java-6-openjdk-amd64/bin"; export java_path="/usr/lib/jvm/java-6-openjdk-amd64/jre/bin/java"; fi
+  - if [[ $SHIPPABLE_JDK_VERSION == "oraclejdk8" ]] ; then export JAVA_HOME="/usr/lib/jvm/java-8-oracle"; export PATH="$PATH:/usr/lib/jvm/java-8-oracle/bin"; export java_path="/usr/lib/jvm/java-8-oracle/jre/bin/java"; fi
+  - update-alternatives --set java $java_path
+  - java -version
+  - ant

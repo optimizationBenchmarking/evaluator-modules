@@ -1,0 +1,12 @@
+##
+## Build with Wercker
+##
+## https://app.wercker.com/#applications/ TODO
+#
+box: optimizationbenchmarking/linux-evaluator-build
+#
+build:
+    steps:
+        - script:
+            name: Ant-based Maven Build
+            code: ant

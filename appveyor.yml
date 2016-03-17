@@ -1,0 +1,34 @@
+##
+## Build with appveyor
+##
+## https://ci.appveyor.com/project/thomasWeise/evaluator-modules
+#  
+environment:
+  matrix:
+    - JAVA_HOME: C:\Program Files\Java\jdk1.7.0
+    - JAVA_HOME: C:\Program Files\Java\jdk1.8.0
+
+install:
+  - ps: if(!(Test-Path -Path 'C:\bin\apache-maven-3.2.5\' )){ cinst maven -Version 3.2.5 }
+  - ps: if(!(Test-Path -Path 'C:\ProgramData\chocolatey\lib\ant\apache-ant-1.9.6\' )){ cinst ant -i -Version 1.9.6 }
+  # choco does not set the PATH environment variable correctly
+  # so we do it manually, like
+  # https://github.com/abelsromero/asciidoctor-maven-plugin/blob/master/appveyor.yml
+  - cmd: SET PATH=C:\ProgramData\chocolatey\lib\ant\apache-ant-1.9.6\bin;C:\bin\apache-maven-3.2.5\bin;%JAVA_HOME%\bin;%PATH%
+  
+cache:
+  - C:\bin\apache-maven-3.2.5\
+  - C:\ProgramData\chocolatey\lib\ant\apache-ant-1.9.6
+
+platform:
+  - x86
+  - x64
+  
+configuration:
+  - Release
+    
+build_script:
+  - ant
+  
+test_script:
+  - echo "Nothing."
