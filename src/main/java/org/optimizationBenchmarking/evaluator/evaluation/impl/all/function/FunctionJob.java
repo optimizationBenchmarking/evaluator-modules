@@ -852,8 +852,9 @@ public abstract class FunctionJob extends ExperimentSetJob {
         if (color != null) {
           line.setColor(color.getColor());
         } else {
-          line.setColor(styles.getColor(
-              experimentFunction.getExperiment().getName(), true).getColor());
+          line.setColor(styles
+              .getColor(experimentFunction.getExperiment().getName(), true)
+              .getColor());
         }
 
         stroke = this.getExperimentStroke(experimentFunction, styles);
@@ -1301,7 +1302,7 @@ public abstract class FunctionJob extends ExperimentSetJob {
           + " clusters with useful data, which will now be processed.");//$NON-NLS-1$
     }
 
-    if (data != null) {
+    if (functionData != null) {
       try (final ISection section = sectionContainer.section(null)) {
         try (final IComplexText title = section.title()) {
           this.renderTitle(title);
