@@ -1,4 +1,4 @@
-package test.junit.org.optimizationBenchmarking.evaluator.impl.single.experimentInfo;
+package test.junit.org.optimizationBenchmarking.evaluator.evaluation.impl.single.experimentInfo;
 
 import org.optimizationBenchmarking.evaluator.evaluation.impl.single.experimentInfo.ExperimentInformation;
 

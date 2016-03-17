@@ -1,4 +1,4 @@
-package test.junit.org.optimizationBenchmarking.evaluator.impl.description.instances;
+package test.junit.org.optimizationBenchmarking.evaluator.evaluation.impl.description.instances;
 
 import org.optimizationBenchmarking.evaluator.evaluation.impl.description.instances.InstanceInformation;
 

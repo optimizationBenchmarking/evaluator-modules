@@ -1,4 +1,4 @@
-package test.junit.org.optimizationBenchmarking.evaluator.impl.all.ecdf;
+package test.junit.org.optimizationBenchmarking.evaluator.evaluation.impl.all.ecdf;
 
 import org.optimizationBenchmarking.evaluator.data.spec.IDimension;
 

@@ -1,4 +1,4 @@
-package test.junit.org.optimizationBenchmarking.evaluator.impl.all.aggregation2D;
+package test.junit.org.optimizationBenchmarking.evaluator.evaluation.impl.all.aggregation2D;
 
 import org.optimizationBenchmarking.evaluator.data.spec.IDimension;
 
