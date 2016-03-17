@@ -6,7 +6,6 @@ import org.junit.Assert;
 import org.optimizationBenchmarking.evaluator.attributes.functions.DimensionTransformationParser;
 import org.optimizationBenchmarking.evaluator.attributes.functions.FunctionAttribute;
 import org.optimizationBenchmarking.evaluator.attributes.functions.NamedParameterTransformationParser;
-import org.optimizationBenchmarking.evaluator.attributes.functions.Transformation;
 import org.optimizationBenchmarking.evaluator.attributes.functions.aggregation2D.Aggregation2D;
 import org.optimizationBenchmarking.evaluator.data.spec.IDimension;
 import org.optimizationBenchmarking.evaluator.data.spec.IExperimentSet;
@@ -26,11 +25,42 @@ import org.optimizationBenchmarking.utils.math.statistics.parameters.Variance;
 import shared.junit.org.optimizationBenchmarking.evaluator.evaluation.ExperimentSetModuleTest;
 
 /** Test aggreation over 2 dimensions */
-public class AllAggregation2DLinear extends ExperimentSetModuleTest {
+public class AllAggregation2DLinearTest extends ExperimentSetModuleTest {
 
   /** aggregate things linearly */
-  public AllAggregation2DLinear() {
+  public AllAggregation2DLinearTest() {
     super(AllAggregation2D.getInstance());
+  }
+
+  /**
+   * Get the string of the x-dimension
+   *
+   * @param xDimension
+   *          the x-dimension
+   * @return the string
+   */
+  protected String getXDimensionString(final IDimension xDimension) {
+    return xDimension.getName();
+  }
+
+  /**
+   * Get the string of the y-dimension
+   *
+   * @param yDimension
+   *          the y-dimension
+   * @return the string
+   */
+  protected String getYInputDimensionString(final IDimension yDimension) {
+    return yDimension.getName();
+  }
+
+  /**
+   * get the output dimension string
+   *
+   * @return the transformation string
+   */
+  protected String getYOutputDimensionString() {
+    return NamedParameterTransformationParser.DEFAULT_PARAMETER_NAME;
   }
 
   /** {@inheritDoc} */
@@ -42,6 +72,7 @@ public class AllAggregation2DLinear extends ExperimentSetModuleTest {
     final ArrayListView<? extends IDimension> dimList;
     final int dimCount;
     final DimensionTransformationParser dimParser;
+    final NamedParameterTransformationParser nptParser;
 
     config = super.getConfiguration(data);
 
@@ -55,19 +86,19 @@ public class AllAggregation2DLinear extends ExperimentSetModuleTest {
 
     dimParser = new DimensionTransformationParser(data);
     config.get(FunctionAttribute.X_AXIS_PARAM, dimParser,
-        dimParser.parseString(dimX.getName()));
+        dimParser.parseString(this.getXDimensionString(dimX)));
     config.get(FunctionAttribute.Y_INPUT_AXIS_PARAM, dimParser,
-        dimParser.parseString(dimY.getName()));
-    config.get(FunctionAttribute.Y_AXIS_OUTPUT_PARAM,
-        new NamedParameterTransformationParser(data),
-        new Transformation());
+        dimParser.parseString(this.getYInputDimensionString(dimY)));
+    nptParser = new NamedParameterTransformationParser(data);
+    config.get(FunctionAttribute.Y_AXIS_OUTPUT_PARAM, nptParser,
+        nptParser.parseString(this.getYOutputDimensionString()));
 
     config.get(Aggregation2D.PRIMARY_AGGREGATE_PARAM,
         StatisticalParameterParser.getInstance(),
-        AllAggregation2DLinear._getAggregate(random));
+        AllAggregation2DLinearTest._getAggregate(random));
     config.get(Aggregation2D.SECONDARY_AGGREGATE_PARAM,
         StatisticalParameterParser.getInstance(),
-        AllAggregation2DLinear._getAggregate(random));
+        AllAggregation2DLinearTest._getAggregate(random));
 
     return config;
   }
