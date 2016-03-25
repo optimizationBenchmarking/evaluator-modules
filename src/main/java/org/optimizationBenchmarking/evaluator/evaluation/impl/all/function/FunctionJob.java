@@ -22,6 +22,7 @@ import org.optimizationBenchmarking.utils.chart.spec.IAxis;
 import org.optimizationBenchmarking.utils.chart.spec.ILine2D;
 import org.optimizationBenchmarking.utils.chart.spec.ILineChart2D;
 import org.optimizationBenchmarking.utils.collections.lists.ArrayListView;
+import org.optimizationBenchmarking.utils.collections.visitors.IVisitor;
 import org.optimizationBenchmarking.utils.config.Configuration;
 import org.optimizationBenchmarking.utils.document.impl.FigureSizeParser;
 import org.optimizationBenchmarking.utils.document.spec.EFigureSize;
@@ -40,8 +41,11 @@ import org.optimizationBenchmarking.utils.graphics.style.spec.IStrokeStyle;
 import org.optimizationBenchmarking.utils.graphics.style.spec.IStyles;
 import org.optimizationBenchmarking.utils.math.BasicNumber;
 import org.optimizationBenchmarking.utils.math.matrix.IMatrix;
-import org.optimizationBenchmarking.utils.math.matrix.impl.MatrixBuilder;
-import org.optimizationBenchmarking.utils.math.matrix.processing.iterator2D.MatrixIterator2D;
+import org.optimizationBenchmarking.utils.math.matrix.impl.MatrixFunctionBuilder;
+import org.optimizationBenchmarking.utils.math.matrix.processing.iterator2D.EIterationMode;
+import org.optimizationBenchmarking.utils.math.matrix.processing.iterator2D.EMissingValueMode;
+import org.optimizationBenchmarking.utils.math.matrix.processing.iterator2D.MatrixIteration2DBuilder;
+import org.optimizationBenchmarking.utils.math.matrix.processing.iterator2D.MatrixIteration2DState;
 import org.optimizationBenchmarking.utils.math.statistics.aggregate.CompoundAggregate;
 import org.optimizationBenchmarking.utils.math.statistics.aggregate.FiniteMaximumAggregate;
 import org.optimizationBenchmarking.utils.math.statistics.aggregate.FiniteMinimumAggregate;
@@ -149,7 +153,7 @@ public abstract class FunctionJob extends ExperimentSetJob {
    *
    * @see #PARAM_RANKING
    */
-  private final RankingStrategy m_ranking;
+  final RankingStrategy m_ranking;
 
   /**
    * should we assume that the experiments keep their last function value
@@ -1426,54 +1430,39 @@ public abstract class FunctionJob extends ExperimentSetJob {
    */
   private final void __rankingTransform(
       final ArrayList<ExperimentFunction> inOut) {
-    final double[] ranks;
     final int size;
-    final MatrixIterator2D iterator;
     final IMatrix[] source;
-    final MatrixBuilder[] builders;
+    final MatrixFunctionBuilder[] builders;
     IMatrix matrix;
     int index, maxRows;
-    BasicNumber x;
-    MatrixBuilder builder;
 
     size = inOut.size();
     source = new IMatrix[size];
-    builders = new MatrixBuilder[size];
-
-    ranks = new double[size];
+    builders = new MatrixFunctionBuilder[size];
 
     maxRows = 128;
     for (index = size; (--index) >= 0;) {
       matrix = inOut.get(index).getFunction();
-
       source[index] = matrix;
       maxRows = Math.max(maxRows, matrix.m());
-      builders[index] = builder = new MatrixBuilder(maxRows);
-      builder.setN(2);
+      builders[index] = new MatrixFunctionBuilder(maxRows, true);
     }
 
-    iterator = MatrixIterator2D.iterate(0, 1, source,
-        (!(this.m_rankingContinue)));
-    while (iterator.hasNext()) {
-      x = iterator.next();
-      this.m_ranking.rankRow(iterator, 0, ranks);
-
-      for (index = iterator.n(); (--index) >= 0;) {
-        builder = builders[iterator.getSource(index)];
-        if (x.isInteger()) {
-          builder.append(x.longValue());
-        } else {
-          builder.append(x.doubleValue());
-        }
-        builder.append(ranks[index]);
-      }
-    }
+    new MatrixIteration2DBuilder().setXDimension(0)//
+        .setYDimension(1)//
+        .setMatrices(source)//
+        .setVisitor(new __RankingTransformer(builders))//
+        .setStartMode(EMissingValueMode.SKIP)//
+        .setEndMode(
+            this.m_rankingContinue ? EMissingValueMode.USE_ITERATION_MODE
+                : EMissingValueMode.SKIP)//
+        .setIterationMode(EIterationMode.KEEP_PREVIOUS).create().run();
 
     for (index = size; (--index) >= 0;) {
       inOut.set(index,
           new ExperimentFunction(//
               inOut.get(index).getExperiment(), //
-              builders[index].make()));
+              builders[index].build()));
       builders[index] = null;
     }
   }
@@ -1644,6 +1633,50 @@ public abstract class FunctionJob extends ExperimentSetJob {
               this.m_styles);
         }
       }
+    }
+  }
+
+  /** the ranking transformer */
+  private final class __RankingTransformer
+      implements IVisitor<MatrixIteration2DState> {
+
+    /** the builders */
+    private final MatrixFunctionBuilder[] m_builders;
+    /** the ranks */
+    private final double[] m_ranks;
+
+    /**
+     * create
+     *
+     * @param builders
+     *          the builders
+     */
+    __RankingTransformer(final MatrixFunctionBuilder[] builders) {
+      super();
+
+      this.m_builders = builders;
+      this.m_ranks = new double[builders.length];
+    }
+
+    @Override
+    public boolean visit(final MatrixIteration2DState object) {
+      int index;
+      MatrixFunctionBuilder builder;
+      BasicNumber x;
+
+      FunctionJob.this.m_ranking.rankRow(object.getY(), 0, this.m_ranks);
+      x = object.getX();
+
+      for (index = object.getSourceMatrixCount(); (--index) >= 0;) {
+        builder = this.m_builders[object.getSourceMatrixIndex(index)];
+        if (x.isInteger()) {
+          builder.addPoint(x.longValue(), this.m_ranks[index]);
+        } else {
+          builder.addPoint(x.doubleValue(), this.m_ranks[index]);
+        }
+      }
+
+      return true;
     }
   }
 }
