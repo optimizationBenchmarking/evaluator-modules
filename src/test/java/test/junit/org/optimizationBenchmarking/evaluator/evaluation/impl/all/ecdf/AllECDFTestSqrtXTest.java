@@ -2,6 +2,8 @@ package test.junit.org.optimizationBenchmarking.evaluator.evaluation.impl.all.ec
 
 import org.optimizationBenchmarking.evaluator.data.spec.IDimension;
 
+import shared.junit.org.optimizationBenchmarking.evaluator.evaluation.EvaluationModuleTest;
+
 /** Test the ECDF */
 public class AllECDFTestSqrtXTest extends AllECDFTest {
 
@@ -13,6 +15,6 @@ public class AllECDFTestSqrtXTest extends AllECDFTest {
   /** {@inheritDoc} */
   @Override
   protected String getXDimensionString(final IDimension xDimension) {
-    return ("sqrt(|" + xDimension.getName() + "|+1)"); //$NON-NLS-1$//$NON-NLS-2$
+    return EvaluationModuleTest.getSqrt(xDimension);
   }
 }
