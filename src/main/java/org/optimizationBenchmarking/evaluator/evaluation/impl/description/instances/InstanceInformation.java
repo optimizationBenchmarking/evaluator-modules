@@ -4,6 +4,7 @@ import java.util.logging.Logger;
 
 import org.optimizationBenchmarking.evaluator.data.spec.IExperimentSet;
 import org.optimizationBenchmarking.evaluator.evaluation.impl.abstr.ExperimentSetModule;
+import org.optimizationBenchmarking.evaluator.evaluation.spec.EModuleType;
 import org.optimizationBenchmarking.utils.config.Configuration;
 
 /**
@@ -14,7 +15,7 @@ public final class InstanceInformation extends ExperimentSetModule {
 
   /** create the instance information tool */
   InstanceInformation() {
-    super();
+    super(EModuleType.DESCRIPTION);
   }
 
   /** {@inheritDoc} */

@@ -4,6 +4,7 @@ import java.util.logging.Logger;
 
 import org.optimizationBenchmarking.evaluator.data.spec.IExperimentSet;
 import org.optimizationBenchmarking.evaluator.evaluation.impl.abstr.ExperimentSetModule;
+import org.optimizationBenchmarking.evaluator.evaluation.spec.EModuleType;
 import org.optimizationBenchmarking.utils.config.Configuration;
 
 /**
@@ -17,7 +18,7 @@ public final class AllECDF extends ExperimentSetModule {
 
   /** create the instance information tool */
   AllECDF() {
-    super();
+    super(EModuleType.BODY);
   }
 
   /** {@inheritDoc} */
