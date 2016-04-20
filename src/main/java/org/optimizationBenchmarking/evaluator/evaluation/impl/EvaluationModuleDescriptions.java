@@ -25,7 +25,7 @@ public final class EvaluationModuleDescriptions
   private static final Object SYNCH = new Object();
 
   /** the globally shared instance of the module descriptions */
-  private static ModuleDescriptions DESCRIPTIONS = null;
+  private static EvaluationModuleDescriptions DESCRIPTIONS = null;
 
   /**
    * create the module descriptions
@@ -54,8 +54,8 @@ public final class EvaluationModuleDescriptions
    *
    * @return the descriptions
    */
-  public static final ModuleDescriptions getDescriptions() {
-    return EvaluationModuleDescriptions.getDescriptions(null);
+  public static final EvaluationModuleDescriptions getInstance() {
+    return EvaluationModuleDescriptions.getInstance(null);
   }
 
   /**
@@ -65,7 +65,7 @@ public final class EvaluationModuleDescriptions
    *          a logger to use
    * @return the descriptions
    */
-  public static final ModuleDescriptions getDescriptions(
+  public static final EvaluationModuleDescriptions getInstance(
       final Logger logger) {
     final IXMLInputJobBuilder<ModuleDescriptionsBuilder> job;
     final String argh;
@@ -88,7 +88,8 @@ public final class EvaluationModuleDescriptions
             ErrorUtils.logError(logger, argh, ioe, false,
                 RethrowMode.AS_ILLEGAL_STATE_EXCEPTION);
           }
-          EvaluationModuleDescriptions.DESCRIPTIONS = builder.getResult();
+          EvaluationModuleDescriptions.DESCRIPTIONS = //
+          ((EvaluationModuleDescriptions) (builder.getResult()));
         }
       }
       return EvaluationModuleDescriptions.DESCRIPTIONS;
@@ -101,7 +102,7 @@ public final class EvaluationModuleDescriptions
    * @return the object replacing a read instance.
    */
   private final Object readResolve() {
-    return EvaluationModuleDescriptions.getDescriptions(null);
+    return EvaluationModuleDescriptions.getInstance(null);
   }
 
   /**
@@ -110,7 +111,7 @@ public final class EvaluationModuleDescriptions
    * @return the object replacing an instance to write
    */
   private final Object writeReplace() {
-    return EvaluationModuleDescriptions.getDescriptions(null);
+    return EvaluationModuleDescriptions.getInstance(null);
   }
 
   /** the module descriptions builder */
@@ -123,7 +124,8 @@ public final class EvaluationModuleDescriptions
 
     /** {@inheritDoc} */
     @Override
-    protected ModuleDescriptions make(final ModuleDescription[] array) {
+    protected EvaluationModuleDescriptions make(
+        final ModuleDescription[] array) {
       return new EvaluationModuleDescriptions(array);
     }
   }

@@ -22,7 +22,8 @@ public final class ExperimentFunction {
    * @param function
    *          the function
    */
-  ExperimentFunction(final IExperiment experiment, final IMatrix function) {
+  ExperimentFunction(final IExperiment experiment,
+      final IMatrix function) {
     super();
     this.m_experiment = experiment;
     this.m_function = function;

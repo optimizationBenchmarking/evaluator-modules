@@ -14,8 +14,7 @@ public class EvaluationModuleDescriptionsTest
 
   /** create */
   public EvaluationModuleDescriptionsTest() {
-    super(null, EvaluationModuleDescriptions.getDescriptions(), true,
-        false);
+    super(null, EvaluationModuleDescriptions.getInstance(), true, false);
   }
 
   /** ensure that the module descriptions list is not empty */
