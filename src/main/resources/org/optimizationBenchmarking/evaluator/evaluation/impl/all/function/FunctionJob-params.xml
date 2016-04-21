@@ -4,7 +4,7 @@
 	allowsMore="true">
 
 	<cd:inherit
-		class="org.optimizationBenchmarking.experimentation.attributes.clusters.ClustererLoader" />
+		class="org.optimizationBenchmarking.evaluator.attributes.clusters.ClustererLoader" />
 
 	<cd:inherit
 		class="org.optimizationBenchmarking.utils.document.impl.FigureSizeParser" />

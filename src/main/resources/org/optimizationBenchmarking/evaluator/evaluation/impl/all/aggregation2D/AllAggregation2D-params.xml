@@ -4,9 +4,9 @@
 	allowsMore="true">
 
 	<cd:inherit
-		class="org.optimizationBenchmarking.experimentation.attributes.functions.aggregation2D.Aggregation2D" />
+		class="org.optimizationBenchmarking.evaluator.attributes.functions.aggregation2D.Aggregation2D" />
 
 	<cd:inherit
-		class="org.optimizationBenchmarking.experimentation.evaluation.impl.all.function.FunctionJob" />
+		class="org.optimizationBenchmarking.evaluator.evaluation.impl.all.function.FunctionJob" />
 
 </cd:configurationDefinition>
