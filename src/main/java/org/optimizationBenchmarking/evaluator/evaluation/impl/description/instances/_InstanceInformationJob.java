@@ -471,7 +471,7 @@ final class _InstanceInformationJob extends ExperimentSetJob {
           }
         }
         body.append(
-            "at least some experiments do not have data for instances"); //$NON-NLS-1$
+            "at least some experiments do not have data for some instances"); //$NON-NLS-1$
         if (missing.size() < 10) {
           body.append(' ');
           SemanticComponentUtils.printNames(ESequenceMode.AND, missing,
