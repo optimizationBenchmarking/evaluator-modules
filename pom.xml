@@ -6,7 +6,7 @@
 	<artifactId>evaluator-modules</artifactId>
 	<version>0.8.6</version>
 	<packaging>jar</packaging>
-	<name>Specification of evaluator Components</name>
+	<name>Modules of the Evaluator Components</name>
 	<description>The modules of the optimizationBenchmarking.org evaluator.</description>
 
 	<parent>
