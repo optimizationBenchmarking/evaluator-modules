@@ -29,10 +29,9 @@ public final class AllAggregation2D extends ExperimentSetModule {
   }
 
   /**
-   * Get the globally shared instance of the instance information module
+   * Get the globally shared instance of the aggregation 2D module
    *
-   * @return the globally shared instance of the instance information
-   *         module
+   * @return the globally shared instance of the aggregation 2D module
    */
   public static final AllAggregation2D getInstance() {
     return __Aggregation2DLoader.INSTANCE;
