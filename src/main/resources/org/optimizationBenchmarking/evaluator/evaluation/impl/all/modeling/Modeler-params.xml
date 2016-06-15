@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cd:configurationDefinition
+	xmlns:cd="http://www.optimizationBenchmarking.org/formats/configuration/configurationDef.1.0.xsd"
+	allowsMore="false">
+
+	<cd:string name="x"
+		description="The model input dimension, i.e., the domain or x-axis of the models." />
+
+	<cd:string name="y"
+		description="The model output dimension, i.e., the co-domain or y-axis of the models." />
+
+	<cd:boolean name="listPerAlgorithm" default="true"
+		description="Should we create a sub-section for each algorithm setup and list all of its behavior models - one for each benchmark instance to which the algorithm setup was applied - in that section?" />
+
+	<cd:boolean name="listPerInstance" default="false"
+		description="Should we create a sub-section for each benchmark instance and list all of its behavior models - one for each algorithm setup applied to it - in that section?" />
+
+
+</cd:configurationDefinition>

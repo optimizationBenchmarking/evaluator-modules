@@ -2,12 +2,10 @@ package org.optimizationBenchmarking.evaluator.evaluation.impl.all.modeling;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.logging.Logger;
 
+import org.optimizationBenchmarking.evaluator.attributes.PerInstanceRuns;
 import org.optimizationBenchmarking.evaluator.attributes.modeling.DimensionRelationship;
 import org.optimizationBenchmarking.evaluator.attributes.modeling.DimensionRelationshipModels;
 import org.optimizationBenchmarking.evaluator.data.spec.IDimension;
@@ -17,7 +15,6 @@ import org.optimizationBenchmarking.evaluator.data.spec.IExperimentSet;
 import org.optimizationBenchmarking.evaluator.data.spec.IInstance;
 import org.optimizationBenchmarking.evaluator.data.spec.IInstanceRuns;
 import org.optimizationBenchmarking.evaluator.evaluation.impl.abstr.ExperimentSetJob;
-import org.optimizationBenchmarking.utils.collections.ImmutableAssociation;
 import org.optimizationBenchmarking.utils.collections.lists.ArrayListView;
 import org.optimizationBenchmarking.utils.comparison.Compare;
 import org.optimizationBenchmarking.utils.config.Configuration;
@@ -31,14 +28,12 @@ import org.optimizationBenchmarking.utils.document.spec.IPlainText;
 import org.optimizationBenchmarking.utils.document.spec.ISection;
 import org.optimizationBenchmarking.utils.document.spec.ISectionBody;
 import org.optimizationBenchmarking.utils.document.spec.ISectionContainer;
-import org.optimizationBenchmarking.utils.document.spec.ISemanticComponent;
 import org.optimizationBenchmarking.utils.graphics.style.spec.IStyle;
 import org.optimizationBenchmarking.utils.graphics.style.spec.IStyles;
 import org.optimizationBenchmarking.utils.math.text.ABCParameterRenderer;
 import org.optimizationBenchmarking.utils.math.text.DoubleConstantParameters;
 import org.optimizationBenchmarking.utils.ml.fitting.spec.IFittingResult;
 import org.optimizationBenchmarking.utils.ml.fitting.spec.ParametricUnaryFunction;
-import org.optimizationBenchmarking.utils.parallel.Execute;
 import org.optimizationBenchmarking.utils.text.ESequenceMode;
 import org.optimizationBenchmarking.utils.text.ETextCase;
 import org.optimizationBenchmarking.utils.text.ISequenceable;
@@ -117,8 +112,9 @@ final class _ModelingJob extends ExperimentSetJob {
     final IStyles styles;
     final NumberAppender appender;
     final int sections;
-    final HashMap<String, HashMap<String, IFittingResult>> results;
+    final PerInstanceRuns<IFittingResult> results;
 
+    results = new PerInstanceRuns<>(data, this.m_attribute, logger);
     appender = new TruncatedNumberAppender();
 
     try (final ISection section = sectionContainer.section(null)) {
@@ -133,8 +129,6 @@ final class _ModelingJob extends ExperimentSetJob {
       try (final ISectionBody body = section.body()) {
         this.__writeIntro(data, body, styles);
 
-        results = this.__compute(data, logger);
-
         sections = ((this.m_listPerAlgorithm ? 1 : 0) + //
             (this.m_listPerInstance ? 1 : 0));
 
@@ -142,7 +136,8 @@ final class _ModelingJob extends ExperimentSetJob {
           if (sections > 1) {
             try (final ISection subsection = body.section(null)) {
               try (final IComplexText subtitle = subsection.title()) {
-                subtitle.append("Models Sorted by Algorithm Setup"); //$NON-NLS-1$
+                subtitle.append(//
+                    "Models Sorted by Algorithm Setup"); //$NON-NLS-1$
               }
               try (final ISectionBody subbody = subsection.body()) {
                 this.__writePerAlgorithm(data, subbody, styles, appender,
@@ -153,6 +148,24 @@ final class _ModelingJob extends ExperimentSetJob {
             body.appendLineBreak();
             this.__writePerAlgorithm(data, body, styles, appender,
                 results);
+          }
+        }
+
+        if (this.m_listPerInstance) {
+          if (sections > 1) {
+            try (final ISection subsection = body.section(null)) {
+              try (final IComplexText subtitle = subsection.title()) {
+                subtitle.append(//
+                    "Models Sorted by Benchmark Instance Setup"); //$NON-NLS-1$
+              }
+              try (final ISectionBody subbody = subsection.body()) {
+                this.__writePerInstance(data, subbody, styles, appender,
+                    results);
+              }
+            }
+          } else {
+            body.appendLineBreak();
+            this.__writePerInstance(data, body, styles, appender, results);
           }
         }
 
@@ -167,59 +180,6 @@ final class _ModelingJob extends ExperimentSetJob {
    */
   private final ArrayListView<ParametricUnaryFunction> __models() {
     return DimensionRelationshipModels.getModels(this.m_dimX, this.m_dimY);
-  }
-
-  /**
-   * Compute the results
-   *
-   * @param data
-   *          the data
-   * @param logger
-   *          the logger
-   * @return the fitting results
-   */
-  @SuppressWarnings({ "rawtypes", "unchecked" })
-  private final HashMap<String, HashMap<String, IFittingResult>> __compute(
-      final IExperimentSet data, final Logger logger) {
-    final HashMap map;
-    HashMap inner;
-    Throwable innerError;
-    String name;
-
-    map = new HashMap<>();
-    for (final IExperiment experiment : data.getData()) {
-      inner = new HashMap<>();
-      map.put(experiment.getName(), inner);
-      for (final IInstanceRuns runs : experiment.getData()) {
-        inner.put(runs.getInstance().getName(),
-            Execute.parallel(this.m_attribute.getter(runs, logger)));
-      }
-    }
-
-    for (final IExperiment experiment : data.getData()) {
-      inner = ((HashMap) (map.get(experiment.getName())));
-      next: for (final IInstanceRuns runs : experiment.getData()) {
-        name = runs.getInstance().getName();
-        try {
-          for (;;) {
-            try {
-              inner.put(name, ((Future) (inner.get(name))).get());
-              continue next;
-            } catch (@SuppressWarnings("unused") final InterruptedException ie) {
-              /** ignore */
-            }
-          }
-        } catch (final ExecutionException exe) {
-          innerError = exe.getCause();
-          if (innerError instanceof RuntimeException) {
-            throw ((RuntimeException) innerError);
-          }
-          throw new IllegalStateException(exe);
-        }
-      }
-    }
-
-    return map;
   }
 
   /** {@inheritDoc} */
@@ -320,7 +280,7 @@ final class _ModelingJob extends ExperimentSetJob {
    * Write the results per algorithm
    *
    * @param data
-   *          the experiment et
+   *          the experiment set
    * @param body
    *          the body
    * @param styles
@@ -333,29 +293,60 @@ final class _ModelingJob extends ExperimentSetJob {
   private final void __writePerAlgorithm(final IExperimentSet data,
       final ISectionBody body, final IStyles styles,
       final NumberAppender appender,
-      final HashMap<String, HashMap<String, IFittingResult>> results) {
-    final ArrayList<Map.Entry<ISemanticComponent, IFittingResult>> list;
-    IInstance inst;
-    HashMap<String, IFittingResult> experimentResults;
+      final PerInstanceRuns<IFittingResult> results) {
+    Map.Entry<IInstanceRuns, IFittingResult>[] list;
 
     body.append(
         "We now present the fitted models for each algorithm setup.");//$NON-NLS-1$
 
-    list = new ArrayList<>();
     for (final IExperiment experiment : data.getData()) {
-      try (final ISection subsection = body.section(null)) {
-        try (final IComplexText subtitle = subsection.title()) {
-          experiment.printShortName(subtitle, ETextCase.AT_TITLE_START);
-        }
-        experimentResults = results.get(experiment.getName());
-        try (final ISectionBody subbody = subsection.body()) {
-          for (final IInstanceRuns runs : experiment.getData()) {
-            list.add(
-                new ImmutableAssociation<ISemanticComponent, IFittingResult>(//
-                    inst = runs.getInstance(), //
-                    experimentResults.get(inst.getName())));
+      list = results.getAllForExperiment(experiment);
+      if ((list != null) && (list.length > 0)) {
+        try (final ISection subsection = body.section(null)) {
+          try (final IComplexText subtitle = subsection.title()) {
+            experiment.printShortName(subtitle, ETextCase.AT_TITLE_START);
           }
-          this.__writeResults(subbody, styles, list, appender);
+          try (final ISectionBody subbody = subsection.body()) {
+            this.__writeResults(subbody, styles, list, true, appender);
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Write the results per algorithm
+   *
+   * @param data
+   *          the experiment et
+   * @param body
+   *          the body
+   * @param styles
+   *          the styles
+   * @param appender
+   *          the appender
+   * @param results
+   *          the results
+   */
+  private final void __writePerInstance(final IExperimentSet data,
+      final ISectionBody body, final IStyles styles,
+      final NumberAppender appender,
+      final PerInstanceRuns<IFittingResult> results) {
+    Map.Entry<IInstanceRuns, IFittingResult>[] list;
+
+    body.append(
+        "We now present the fitted models for each benchmark instance.");//$NON-NLS-1$
+
+    for (final IInstance instance : data.getInstances().getData()) {
+      list = results.getAllForInstance(instance);
+      if ((list != null) && (list.length > 0)) {
+        try (final ISection subsection = body.section(null)) {
+          try (final IComplexText subtitle = subsection.title()) {
+            instance.printShortName(subtitle, ETextCase.AT_TITLE_START);
+          }
+          try (final ISectionBody subbody = subsection.body()) {
+            this.__writeResults(subbody, styles, list, false, appender);
+          }
         }
       }
     }
@@ -370,20 +361,25 @@ final class _ModelingJob extends ExperimentSetJob {
    *          the body
    * @param styles
    *          the provided styles
+   * @param useInstance
+   *          print the instance name, otherwise print experiment name
    * @param numberAppender
    *          the number appender to use
    */
   private final void __writeResults(final ISectionBody body,
       final IStyles styles,
-      final Iterable<Map.Entry<ISemanticComponent, IFittingResult>> results,
-      final NumberAppender numberAppender) {
+      final Map.Entry<IInstanceRuns, IFittingResult>[] results,
+      final boolean useInstance, final NumberAppender numberAppender) {
     IFittingResult result;
     ParametricUnaryFunction function;
+    IInstanceRuns runs;
 
     try (final IList list = body.itemization()) {
-      for (final Map.Entry<ISemanticComponent, IFittingResult> entry : results) {
+      for (final Map.Entry<IInstanceRuns, IFittingResult> entry : results) {
         try (final IComplexText item = list.item()) {
-          entry.getKey().printShortName(item, ETextCase.IN_SENTENCE);
+          runs = entry.getKey();
+          (useInstance ? runs.getInstance() : runs.getOwner())//
+              .printShortName(item, ETextCase.IN_SENTENCE);
           item.append(':');
           result = entry.getValue();
           function = result.getFittedFunction();

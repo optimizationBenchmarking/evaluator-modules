@@ -15,5 +15,9 @@
 		class="org.optimizationBenchmarking.evaluator.evaluation.impl.all.ecdf.AllECDF"
 		description="The Empiricial Cumulative Distribution Function (ECDF) &#x2012; the fraction of runs that have reached a certain goal." />
 
+	<m:module name="Behavior Modeling"
+		class="org.optimizationBenchmarking.evaluator.evaluation.impl.all.modeling.Modeler"
+		description="Model the behavior of each algorithm setup on each benchmark function. Several different common behavior models (functions) are fitted to the measured data and the best fit per setup-instance pair is displayed. This will take much time, but may offer interesting insights." />
+
 </m:modules>
 	
