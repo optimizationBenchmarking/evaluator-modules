@@ -1041,7 +1041,7 @@ public abstract class FunctionJob extends ExperimentSetJob {
     final String mainPath;
     final IClustering clustering;
     final ArrayListView<ExperimentSetFunctions> allFunctions;
-    final __DrawChart[] tasks;
+    final Future<Void>[] tasks;
     ExperimentSetFunctions experimentSetFunctions;
     ICluster cluster;
     IFigure curFigure;
@@ -1116,7 +1116,7 @@ public abstract class FunctionJob extends ExperimentSetJob {
           this.renderFigureSeriesCaption(data, caption);
         }
 
-        tasks = new __DrawChart[size];
+        tasks = new Future[size];
         index = 0;
 
         if (this.m_makeLegendFigure) {
@@ -1131,8 +1131,8 @@ public abstract class FunctionJob extends ExperimentSetJob {
           }
           curChart = curFigure.lineChart2D();
           curChart.setLegendMode(ELegendMode.CHART_IS_LEGEND);
-          tasks[index - 1] = new __DrawChart(curFigure, curChart,
-              allFunctions.get(0), true, true, styles);
+          tasks[index - 1] = Execute.parallel(new __DrawChart(curFigure,
+              curChart, allFunctions.get(0), true, true, styles));
         }
 
         for (final ExperimentSetFunctions experimentSetFunctions2 : data
@@ -1156,12 +1156,13 @@ public abstract class FunctionJob extends ExperimentSetJob {
           curChart.setLegendMode(this.m_makeLegendFigure//
               ? ELegendMode.HIDE_COMPLETE_LEGEND//
               : ELegendMode.SHOW_COMPLETE_LEGEND);
-          tasks[index - 1] = new __DrawChart(curFigure, curChart,
-              experimentSetFunctions2, (!(this.m_makeLegendFigure)),
-              (!(this.m_makeLegendFigure)), styles);
+          tasks[index - 1] = Execute
+              .parallel(new __DrawChart(curFigure, curChart,
+                  experimentSetFunctions2, (!(this.m_makeLegendFigure)),
+                  (!(this.m_makeLegendFigure)), styles));
         }
 
-        Execute.parallelAndWait(null, tasks);
+        Execute.join(tasks);
 
         ret = figureSeries.getLabel();
       }

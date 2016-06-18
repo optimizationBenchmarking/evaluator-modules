@@ -18,6 +18,7 @@ import org.optimizationBenchmarking.evaluator.evaluation.impl.abstr.ExperimentSe
 import org.optimizationBenchmarking.utils.collections.lists.ArrayListView;
 import org.optimizationBenchmarking.utils.comparison.Compare;
 import org.optimizationBenchmarking.utils.config.Configuration;
+import org.optimizationBenchmarking.utils.document.impl.SemanticComponentUtils;
 import org.optimizationBenchmarking.utils.document.spec.EMathComparison;
 import org.optimizationBenchmarking.utils.document.spec.IComplexText;
 import org.optimizationBenchmarking.utils.document.spec.IDocument;
@@ -226,19 +227,19 @@ final class _ModelingJob extends ExperimentSetJob {
         "In order to better understand the behavior of the investigated algorithms, we try to fit models, i.e., mathematical functions, to their behavior.");//$NON-NLS-1$
     body.append(
         " The input (x-axis, domain) of the functions is the measured dimension ");//$NON-NLS-1$
-    this.m_dimX.printLongName(body, ETextCase.IN_SENTENCE);
-    body.append(" (");//$NON-NLS-1$
-    this.m_dimX.printShortName(body, ETextCase.IN_SENTENCE);
-    body.append(") and the output (y-axis, codomain) is ");//$NON-NLS-1$
-    this.m_dimY.printLongName(body, ETextCase.IN_SENTENCE);
-    body.append(" (");//$NON-NLS-1$
-    this.m_dimY.printShortName(body, ETextCase.IN_SENTENCE);
+    SemanticComponentUtils.printLongAndShortNameIfDifferent(this.m_dimX,
+        body, ETextCase.IN_SENTENCE);
+    body.append(" and the output (y-axis, codomain) is ");//$NON-NLS-1$
+    SemanticComponentUtils.printLongAndShortNameIfDifferent(this.m_dimY,
+        body, ETextCase.IN_SENTENCE);
     body.append(". In other words, we want to find a function ");//$NON-NLS-1$
     try (final IMath rootMath = body.inlineMath()) {
       try (final IMath equals = rootMath.compare(EMathComparison.EQUAL)) {
         this.m_dimY.mathRender(equals, _ModelingJob.RENDERER);
         try (final IMath func = equals.nAryFunction("f", 1, 1)) {//$NON-NLS-1$
-          this.m_dimX.mathRender(func, _ModelingJob.RENDERER);
+          try (final IMath braces = func.inBraces()) {
+            this.m_dimX.mathRender(braces, _ModelingJob.RENDERER);
+          }
         }
       }
     }
@@ -250,7 +251,9 @@ final class _ModelingJob extends ExperimentSetJob {
     body.append(". Obviously, we cannot know the nature of ");//$NON-NLS-1$
     try (final IMath rootMath = body.inlineMath()) {
       try (final IMath func = rootMath.nAryFunction("f", 1, 1)) {//$NON-NLS-1$
-        this.m_dimX.mathRender(func, _ModelingJob.RENDERER);
+        try (final IMath braces = func.inBraces()) {
+          this.m_dimX.mathRender(braces, _ModelingJob.RENDERER);
+        }
       }
     }
     body.append(
@@ -381,6 +384,7 @@ final class _ModelingJob extends ExperimentSetJob {
           (useInstance ? runs.getInstance() : runs.getOwner())//
               .printShortName(item, ETextCase.IN_SENTENCE);
           item.append(':');
+          item.append(' ');
           result = entry.getValue();
           function = result.getFittedFunction();
           try (final IComplexText functionText = item
@@ -392,9 +396,6 @@ final class _ModelingJob extends ExperimentSetJob {
                   this.m_dimX);
             }
           }
-          item.append(" with quality "); //$NON-NLS-1$
-          numberAppender.appendTo(result.getQuality(),
-              ETextCase.IN_SENTENCE, item);
         }
       }
     }
