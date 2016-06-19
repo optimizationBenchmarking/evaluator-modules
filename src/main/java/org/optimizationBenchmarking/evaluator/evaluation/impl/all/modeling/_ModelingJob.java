@@ -363,6 +363,23 @@ final class _ModelingJob extends ExperimentSetJob {
     ParametricUnaryFunction function;
     IInstanceRuns runs;
 
+    try (final IMath math = body.inlineMath()) {
+      try (final IMath approx = math
+          .compare(EMathComparison.APPROXIMATELY)) {
+        try (final IMath func = approx.nAryFunction(this.m_dimY.getName(),
+            2, 2)) {
+          try (final IComplexText text = func.text()) {
+            text.append(useInstance ? "algorithm setup" //$NON-NLS-1$
+                : "benchmark instance");//$NON-NLS-1$
+          }
+          this.m_dimX.mathRender(func, ABCParameterRenderer.INSTANCE);
+        }
+        try (final IComplexText text = approx.text()) {
+          text.append('\u2026');
+        }
+      }
+    }
+
     try (final IList list = body.itemization()) {
       for (final Map.Entry<IInstanceRuns, IFittingResult> entry : results) {
         try (final IComplexText item = list.item()) {
