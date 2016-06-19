@@ -38,7 +38,6 @@ import org.optimizationBenchmarking.utils.ml.fitting.spec.ParametricUnaryFunctio
 import org.optimizationBenchmarking.utils.text.ESequenceMode;
 import org.optimizationBenchmarking.utils.text.ETextCase;
 import org.optimizationBenchmarking.utils.text.ISequenceable;
-import org.optimizationBenchmarking.utils.text.numbers.NumberAppender;
 import org.optimizationBenchmarking.utils.text.numbers.TextNumberAppender;
 import org.optimizationBenchmarking.utils.text.numbers.TruncatedNumberAppender;
 import org.optimizationBenchmarking.utils.text.textOutput.ITextOutput;
@@ -111,12 +110,10 @@ final class _ModelingJob extends ExperimentSetJob {
   protected final void doMain(final IExperimentSet data,
       final ISectionContainer sectionContainer, final Logger logger) {
     final IStyles styles;
-    final NumberAppender appender;
     final int sections;
     final PerInstanceRuns<IFittingResult> results;
 
     results = new PerInstanceRuns<>(data, this.m_attribute, logger);
-    appender = new TruncatedNumberAppender();
 
     try (final ISection section = sectionContainer.section(null)) {
       styles = section.getStyles();
@@ -141,14 +138,12 @@ final class _ModelingJob extends ExperimentSetJob {
                     "Models Sorted by Algorithm Setup"); //$NON-NLS-1$
               }
               try (final ISectionBody subbody = subsection.body()) {
-                this.__writePerAlgorithm(data, subbody, styles, appender,
-                    results);
+                this.__writePerAlgorithm(data, subbody, styles, results);
               }
             }
           } else {
             body.appendLineBreak();
-            this.__writePerAlgorithm(data, body, styles, appender,
-                results);
+            this.__writePerAlgorithm(data, body, styles, results);
           }
         }
 
@@ -160,13 +155,12 @@ final class _ModelingJob extends ExperimentSetJob {
                     "Models Sorted by Benchmark Instance Setup"); //$NON-NLS-1$
               }
               try (final ISectionBody subbody = subsection.body()) {
-                this.__writePerInstance(data, subbody, styles, appender,
-                    results);
+                this.__writePerInstance(data, subbody, styles, results);
               }
             }
           } else {
             body.appendLineBreak();
-            this.__writePerInstance(data, body, styles, appender, results);
+            this.__writePerInstance(data, body, styles, results);
           }
         }
 
@@ -288,14 +282,11 @@ final class _ModelingJob extends ExperimentSetJob {
    *          the body
    * @param styles
    *          the styles
-   * @param appender
-   *          the appender
    * @param results
    *          the results
    */
   private final void __writePerAlgorithm(final IExperimentSet data,
       final ISectionBody body, final IStyles styles,
-      final NumberAppender appender,
       final PerInstanceRuns<IFittingResult> results) {
     Map.Entry<IInstanceRuns, IFittingResult>[] list;
 
@@ -310,7 +301,7 @@ final class _ModelingJob extends ExperimentSetJob {
             experiment.printShortName(subtitle, ETextCase.AT_TITLE_START);
           }
           try (final ISectionBody subbody = subsection.body()) {
-            this.__writeResults(subbody, styles, list, true, appender);
+            this.__writeResults(subbody, styles, list, true);
           }
         }
       }
@@ -326,14 +317,11 @@ final class _ModelingJob extends ExperimentSetJob {
    *          the body
    * @param styles
    *          the styles
-   * @param appender
-   *          the appender
    * @param results
    *          the results
    */
   private final void __writePerInstance(final IExperimentSet data,
       final ISectionBody body, final IStyles styles,
-      final NumberAppender appender,
       final PerInstanceRuns<IFittingResult> results) {
     Map.Entry<IInstanceRuns, IFittingResult>[] list;
 
@@ -348,7 +336,7 @@ final class _ModelingJob extends ExperimentSetJob {
             instance.printShortName(subtitle, ETextCase.AT_TITLE_START);
           }
           try (final ISectionBody subbody = subsection.body()) {
-            this.__writeResults(subbody, styles, list, false, appender);
+            this.__writeResults(subbody, styles, list, false);
           }
         }
       }
@@ -366,13 +354,11 @@ final class _ModelingJob extends ExperimentSetJob {
    *          the provided styles
    * @param useInstance
    *          print the instance name, otherwise print experiment name
-   * @param numberAppender
-   *          the number appender to use
    */
   private final void __writeResults(final ISectionBody body,
       final IStyles styles,
       final Map.Entry<IInstanceRuns, IFittingResult>[] results,
-      final boolean useInstance, final NumberAppender numberAppender) {
+      final boolean useInstance) {
     IFittingResult result;
     ParametricUnaryFunction function;
     IInstanceRuns runs;
@@ -391,7 +377,8 @@ final class _ModelingJob extends ExperimentSetJob {
               .style(_ModelingJob.__modelColor(styles, function))) {
             try (final IMath math = functionText.inlineMath()) {
               function.mathRender(math,
-                  new DoubleConstantParameters(numberAppender,
+                  new DoubleConstantParameters(
+                      TruncatedNumberAppender.INSTANCE,
                       result.getFittedParametersRef()),
                   this.m_dimX);
             }
