@@ -1034,7 +1034,7 @@ public abstract class FunctionJob extends ExperimentSetJob {
    *          the logger
    * @return the actual label of the created figure
    */
-  @SuppressWarnings("resource")
+  @SuppressWarnings({ "resource", "unchecked" })
   protected ILabel renderPlots(final FunctionData data,
       final ISectionBody body, final IStyles styles, final Logger logger) {
     final ILabel ret;
