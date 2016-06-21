@@ -17,10 +17,12 @@ public final class Modeler extends ExperimentSetModule {
   public static final String PARAM_X = "x"; //$NON-NLS-1$
   /** the y axis */
   public static final String PARAM_Y = "y"; //$NON-NLS-1$
-  /** the should we list the models for each instance? */
-  public static final String PARAM_LIST_PER_INSTANCE = "listPerInstance"; //$NON-NLS-1$
-  /** the should we list the models for each algorithm? */
-  public static final String PARAM_LIST_PER_ALGORITHM = "listPerAlgorithm"; //$NON-NLS-1$
+  /** the overall listing */
+  public static final String PARAM_OVERALL = "overall"; //$NON-NLS-1$
+  /** should we list the models for each instance? */
+  public static final String PARAM_PER_INSTANCE = "perInstance"; //$NON-NLS-1$
+  /** should we list the models for each algorithm? */
+  public static final String PARAM_PER_ALGORITHM = "perAlgorithm"; //$NON-NLS-1$
 
   /** create the instance information tool */
   Modeler() {

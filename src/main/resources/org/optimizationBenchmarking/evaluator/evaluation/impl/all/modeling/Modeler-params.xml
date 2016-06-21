@@ -9,11 +9,48 @@
 	<cd:string name="y"
 		description="The model output dimension, i.e., the co-domain or y-axis of the models." />
 
-	<cd:boolean name="listPerAlgorithm" default="true"
-		description="Should we create a sub-section for each algorithm setup and list all of its behavior models - one for each benchmark instance to which the algorithm setup was applied - in that section?" />
+	<cd:instance name="overall"
+		description="Print the overall model information without distinguishing different instances or algorithms."
+		class="org.optimizationBenchmarking.evaluator.evaluation.impl.all.modeling.EModelInfo"
+		parser="org.optimizationBenchmarking.evaluator.evaluation.impl.all.modeling.ModelInfoParser"
+		default="statistics only" allowsMore="false">
+		<cd:choice name="none" description="Don't print the overall model information." />
+		<cd:choice name="statistics only"
+			description="Print aggregate statistics computed from the discovered models." />
+		<cd:choice name="models only"
+			description="For each algorithm/benchmark instance, print the fitted model." />
+		<cd:choice name="all"
+			description="Print all information that can be presented about the models. This may be a lot of text." />
+	</cd:instance>
 
-	<cd:boolean name="listPerInstance" default="false"
-		description="Should we create a sub-section for each benchmark instance and list all of its behavior models - one for each algorithm setup applied to it - in that section?" />
+	<cd:instance name="perAlgorithm"
+		description="Sort the data by algorithm and print information in a separate section for each algorithm setup."
+		class="org.optimizationBenchmarking.evaluator.evaluation.impl.all.modeling.EModelInfo"
+		parser="org.optimizationBenchmarking.evaluator.evaluation.impl.all.modeling.ModelInfoParser"
+		default="statistics only" allowsMore="false">
+		<cd:choice name="none" description="Don't print the overall model information." />
+		<cd:choice name="statistics only"
+			description="Print aggregate statistics computed from the discovered models." />
+		<cd:choice name="models only"
+			description="For each algorithm/benchmark instance, print the fitted model." />
+		<cd:choice name="all"
+			description="Print all information that can be presented about the models. This may be a lot of text." />
+	</cd:instance>
+
+	<cd:instance name="perInstance"
+		description="Sort the data by benchmark instance and print information in a separate section for each benchmark instance."
+		class="org.optimizationBenchmarking.evaluator.evaluation.impl.all.modeling.EModelInfo"
+		parser="org.optimizationBenchmarking.evaluator.evaluation.impl.all.modeling.ModelInfoParser"
+		default="statistics only" allowsMore="false">
+		<cd:choice name="none" description="Don't print the overall model information." />
+		<cd:choice name="statistics only"
+			description="Print aggregate statistics computed from the discovered models." />
+		<cd:choice name="models only"
+			description="For each algorithm/benchmark instance, print the fitted model." />
+		<cd:choice name="all"
+			description="Print all information that can be presented about the models. This may be a lot of text." />
+	</cd:instance>
+
 
 
 </cd:configurationDefinition>

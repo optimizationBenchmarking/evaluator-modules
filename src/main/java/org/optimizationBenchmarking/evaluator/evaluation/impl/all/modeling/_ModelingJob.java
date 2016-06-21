@@ -38,6 +38,7 @@ import org.optimizationBenchmarking.utils.ml.fitting.spec.ParametricUnaryFunctio
 import org.optimizationBenchmarking.utils.text.ESequenceMode;
 import org.optimizationBenchmarking.utils.text.ETextCase;
 import org.optimizationBenchmarking.utils.text.ISequenceable;
+import org.optimizationBenchmarking.utils.text.numbers.NumberAppender;
 import org.optimizationBenchmarking.utils.text.numbers.TextNumberAppender;
 import org.optimizationBenchmarking.utils.text.numbers.TruncatedNumberAppender;
 import org.optimizationBenchmarking.utils.text.textOutput.ITextOutput;
@@ -48,6 +49,9 @@ final class _ModelingJob extends ExperimentSetJob {
   /** the parameter renderer */
   static final IParameterRenderer RENDERER = ABCParameterRenderer.INSTANCE;
 
+  /** the number appender to use */
+  private static final NumberAppender APPENDER = TruncatedNumberAppender.INSTANCE;
+
   /** the {@code x}-axis dimension */
   final IDimension m_dimX;
   /** the {@code y}-axis dimension */
@@ -56,10 +60,12 @@ final class _ModelingJob extends ExperimentSetJob {
   /** the dimension relationship attribute */
   private final DimensionRelationship m_attribute;
 
+  /** Overall, unsorted printing */
+  private final EModelInfo m_overall;
   /** Should we list the models per algorithm? */
-  private final boolean m_listPerAlgorithm;
+  private final EModelInfo m_perAlgorithm;
   /** Should we list the models per benchmark instance? */
-  private final boolean m_listPerInstance;
+  private final EModelInfo m_perInstance;
 
   /**
    * Create the modeling job
@@ -99,10 +105,15 @@ final class _ModelingJob extends ExperimentSetJob {
 
     this.m_attribute = new DimensionRelationship(this.m_dimX, this.m_dimY);
 
-    this.m_listPerAlgorithm = config
-        .getBoolean(Modeler.PARAM_LIST_PER_ALGORITHM, true);
-    this.m_listPerInstance = config.getBoolean(
-        Modeler.PARAM_LIST_PER_INSTANCE, (!(this.m_listPerAlgorithm)));
+    this.m_perAlgorithm = config.get(Modeler.PARAM_PER_ALGORITHM,
+        ModelInfoParser.INSTANCE, EModelInfo.NONE);
+    this.m_perInstance = config.get(Modeler.PARAM_PER_INSTANCE,
+        ModelInfoParser.INSTANCE, EModelInfo.NONE);
+    this.m_overall = config.get(Modeler.PARAM_OVERALL,
+        ModelInfoParser.INSTANCE, //
+        ((this.m_perAlgorithm == EModelInfo.NONE)
+            && (this.m_perInstance == EModelInfo.NONE))//
+                ? EModelInfo.STATISTICS_ONLY : EModelInfo.NONE);
   }
 
   /** {@inheritDoc} */
@@ -127,15 +138,33 @@ final class _ModelingJob extends ExperimentSetJob {
       try (final ISectionBody body = section.body()) {
         this.__writeIntro(data, body, styles);
 
-        sections = ((this.m_listPerAlgorithm ? 1 : 0) + //
-            (this.m_listPerInstance ? 1 : 0));
+        sections = ((this.m_overall != EModelInfo.NONE) ? 1 : 0) + //
+            ((this.m_perAlgorithm != EModelInfo.NONE) ? 1 : 0) + //
+            ((this.m_perInstance != EModelInfo.NONE) ? 1 : 0);//
 
-        if (this.m_listPerAlgorithm) {
+        if (this.m_overall != EModelInfo.NONE) {
           if (sections > 1) {
             try (final ISection subsection = body.section(null)) {
               try (final IComplexText subtitle = subsection.title()) {
                 subtitle.append(//
-                    "Models Sorted by Algorithm Setup"); //$NON-NLS-1$
+                    "Overall Model Information"); //$NON-NLS-1$
+              }
+              try (final ISectionBody subbody = subsection.body()) {
+                this.__writeOverall(data, subbody, styles, results);
+              }
+            }
+          } else {
+            body.appendLineBreak();
+            this.__writeOverall(data, body, styles, results);
+          }
+        }
+
+        if (this.m_perAlgorithm != EModelInfo.NONE) {
+          if (sections > 1) {
+            try (final ISection subsection = body.section(null)) {
+              try (final IComplexText subtitle = subsection.title()) {
+                subtitle.append(//
+                    "Models Grouped by Algorithm Setup"); //$NON-NLS-1$
               }
               try (final ISectionBody subbody = subsection.body()) {
                 this.__writePerAlgorithm(data, subbody, styles, results);
@@ -147,12 +176,12 @@ final class _ModelingJob extends ExperimentSetJob {
           }
         }
 
-        if (this.m_listPerInstance) {
+        if (this.m_perInstance != EModelInfo.NONE) {
           if (sections > 1) {
             try (final ISection subsection = body.section(null)) {
               try (final IComplexText subtitle = subsection.title()) {
                 subtitle.append(//
-                    "Models Sorted by Benchmark Instance Setup"); //$NON-NLS-1$
+                    "Models Grouped by Benchmark Instance Setup"); //$NON-NLS-1$
               }
               try (final ISectionBody subbody = subsection.body()) {
                 this.__writePerInstance(data, subbody, styles, results);
@@ -242,7 +271,11 @@ final class _ModelingJob extends ExperimentSetJob {
     this.m_dimY.printShortName(body, ETextCase.IN_SENTENCE);
     body.append(" over ");//$NON-NLS-1$
     this.m_dimX.printShortName(body, ETextCase.IN_SENTENCE);
-    body.append(". Obviously, we cannot know the nature of ");//$NON-NLS-1$
+    body.append('.');
+
+    body.appendLineBreak();
+
+    body.append("Obviously, we cannot know the nature of ");//$NON-NLS-1$
     try (final IMath rootMath = body.inlineMath()) {
       try (final IMath func = rootMath.nAryFunction("f", 1, 1)) {//$NON-NLS-1$
         try (final IMath braces = func.inBraces()) {
@@ -271,6 +304,32 @@ final class _ModelingJob extends ExperimentSetJob {
         data.getInstances().getData().size(), //
         ETextCase.IN_SENTENCE, body);
     body.append(" benchmark instances.");//$NON-NLS-1$
+
+    body.appendLineBreak();
+    body.append(//
+        "Since all models are fitted on measured data, there are two sources of errors that may bias the results: First, the measurements may be imprecise. Second, we cannot guarantee that the fitting algorithms will find the globally best fit for a model or even the best model. Thus, all ");//$NON-NLS-1$
+    _ModelingJob.APPENDER.printDescription(body, ETextCase.IN_SENTENCE);
+    body.append('.');
+  }
+
+  /**
+   * Write the overall results
+   *
+   * @param data
+   *          the experiment set
+   * @param body
+   *          the body
+   * @param styles
+   *          the styles
+   * @param results
+   *          the results
+   */
+  private final void __writeOverall(final IExperimentSet data,
+      final ISectionBody body, final IStyles styles,
+      final PerInstanceRuns<IFittingResult> results) {
+
+    body.append("We now present all the fitted models: ");//$NON-NLS-1$
+    this.__writeResults(body, styles, results.getAll(), false, false);
   }
 
   /**
@@ -301,7 +360,7 @@ final class _ModelingJob extends ExperimentSetJob {
             experiment.printShortName(subtitle, ETextCase.AT_TITLE_START);
           }
           try (final ISectionBody subbody = subsection.body()) {
-            this.__writeResults(subbody, styles, list, true);
+            this.__writeResults(subbody, styles, list, false, true);
           }
         }
       }
@@ -336,7 +395,7 @@ final class _ModelingJob extends ExperimentSetJob {
             instance.printShortName(subtitle, ETextCase.AT_TITLE_START);
           }
           try (final ISectionBody subbody = subsection.body()) {
-            this.__writeResults(subbody, styles, list, false);
+            this.__writeResults(subbody, styles, list, true, false);
           }
         }
       }
@@ -352,13 +411,16 @@ final class _ModelingJob extends ExperimentSetJob {
    *          the body
    * @param styles
    *          the provided styles
-   * @param useInstance
-   *          print the instance name, otherwise print experiment name
+   * @param groupedByInstance
+   *          print the instance name
+   * @param groupedByAlgorithm
+   *          print the algorithm setup name
    */
   private final void __writeResults(final ISectionBody body,
       final IStyles styles,
       final Map.Entry<IInstanceRuns, IFittingResult>[] results,
-      final boolean useInstance) {
+      final boolean groupedByInstance, final boolean groupedByAlgorithm) {
+    final int nparams;
     IFittingResult result;
     ParametricUnaryFunction function;
     IInstanceRuns runs;
@@ -366,13 +428,21 @@ final class _ModelingJob extends ExperimentSetJob {
     try (final IMath math = body.inlineMath()) {
       try (final IMath approx = math
           .compare(EMathComparison.APPROXIMATELY)) {
+        nparams = ((groupedByInstance ? 2 : (groupedByAlgorithm ? 2 : 3)));
         try (final IMath func = approx.nAryFunction(this.m_dimY.getName(),
-            2, 2)) {
-          try (final IComplexText text = func.text()) {
-            text.append(useInstance ? "algorithm setup" //$NON-NLS-1$
-                : "benchmark instance");//$NON-NLS-1$
+            nparams, nparams)) {
+
+          if (!groupedByInstance) {
+            try (final IComplexText text = func.text()) {
+              text.append("benchmark instance"); //$NON-NLS-1$
+            }
           }
-          this.m_dimX.mathRender(func, ABCParameterRenderer.INSTANCE);
+          if (!groupedByAlgorithm) {
+            try (final IComplexText text = func.text()) {
+              text.append("algorithm setup"); //$NON-NLS-1$
+            }
+          }
+          this.m_dimX.mathRender(func, _ModelingJob.RENDERER);
         }
         try (final IComplexText text = approx.text()) {
           text.append('\u2026');
@@ -384,8 +454,15 @@ final class _ModelingJob extends ExperimentSetJob {
       for (final Map.Entry<IInstanceRuns, IFittingResult> entry : results) {
         try (final IComplexText item = list.item()) {
           runs = entry.getKey();
-          (useInstance ? runs.getInstance() : runs.getOwner())//
-              .printShortName(item, ETextCase.IN_SENTENCE);
+          if (!groupedByInstance) {
+            runs.getInstance().printShortName(item, ETextCase.IN_SENTENCE);
+            if (!groupedByAlgorithm) {
+              item.append(" and "); //$NON-NLS-1$
+            }
+          }
+          if (!groupedByAlgorithm) {
+            runs.getOwner().printShortName(item, ETextCase.IN_SENTENCE);
+          }
           item.append(':');
           item.append(' ');
           result = entry.getValue();
@@ -394,8 +471,7 @@ final class _ModelingJob extends ExperimentSetJob {
               .style(_ModelingJob.__modelColor(styles, function))) {
             try (final IMath math = functionText.inlineMath()) {
               function.mathRender(math,
-                  new DoubleConstantParameters(
-                      TruncatedNumberAppender.INSTANCE,
+                  new DoubleConstantParameters(_ModelingJob.APPENDER,
                       result.getFittedParametersRef()),
                   this.m_dimX);
             }
