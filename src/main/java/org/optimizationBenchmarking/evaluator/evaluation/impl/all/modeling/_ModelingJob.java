@@ -1,7 +1,9 @@
 package org.optimizationBenchmarking.evaluator.evaluation.impl.all.modeling;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -19,9 +21,12 @@ import org.optimizationBenchmarking.utils.collections.lists.ArrayListView;
 import org.optimizationBenchmarking.utils.comparison.Compare;
 import org.optimizationBenchmarking.utils.config.Configuration;
 import org.optimizationBenchmarking.utils.document.impl.SemanticComponentUtils;
+import org.optimizationBenchmarking.utils.document.spec.ELabelType;
 import org.optimizationBenchmarking.utils.document.spec.EMathComparison;
+import org.optimizationBenchmarking.utils.document.spec.ETableCellDef;
 import org.optimizationBenchmarking.utils.document.spec.IComplexText;
 import org.optimizationBenchmarking.utils.document.spec.IDocument;
+import org.optimizationBenchmarking.utils.document.spec.ILabel;
 import org.optimizationBenchmarking.utils.document.spec.IList;
 import org.optimizationBenchmarking.utils.document.spec.IMath;
 import org.optimizationBenchmarking.utils.document.spec.IParameterRenderer;
@@ -29,8 +34,15 @@ import org.optimizationBenchmarking.utils.document.spec.IPlainText;
 import org.optimizationBenchmarking.utils.document.spec.ISection;
 import org.optimizationBenchmarking.utils.document.spec.ISectionBody;
 import org.optimizationBenchmarking.utils.document.spec.ISectionContainer;
+import org.optimizationBenchmarking.utils.document.spec.ISemanticComponent;
+import org.optimizationBenchmarking.utils.document.spec.ITable;
+import org.optimizationBenchmarking.utils.document.spec.ITableRow;
+import org.optimizationBenchmarking.utils.document.spec.ITableSection;
 import org.optimizationBenchmarking.utils.graphics.style.spec.IStyle;
 import org.optimizationBenchmarking.utils.graphics.style.spec.IStyles;
+import org.optimizationBenchmarking.utils.math.statistics.IStatisticInfo;
+import org.optimizationBenchmarking.utils.math.statistics.statisticInfo.StatisticInfoBuilder;
+import org.optimizationBenchmarking.utils.math.statistics.statisticInfo.StatisticInfoPrinter;
 import org.optimizationBenchmarking.utils.math.text.ABCParameterRenderer;
 import org.optimizationBenchmarking.utils.math.text.DoubleConstantParameters;
 import org.optimizationBenchmarking.utils.ml.fitting.spec.IFittingResult;
@@ -38,6 +50,7 @@ import org.optimizationBenchmarking.utils.ml.fitting.spec.ParametricUnaryFunctio
 import org.optimizationBenchmarking.utils.text.ESequenceMode;
 import org.optimizationBenchmarking.utils.text.ETextCase;
 import org.optimizationBenchmarking.utils.text.ISequenceable;
+import org.optimizationBenchmarking.utils.text.numbers.InTextNumberAppender;
 import org.optimizationBenchmarking.utils.text.numbers.NumberAppender;
 import org.optimizationBenchmarking.utils.text.numbers.TextNumberAppender;
 import org.optimizationBenchmarking.utils.text.numbers.TruncatedNumberAppender;
@@ -328,8 +341,8 @@ final class _ModelingJob extends ExperimentSetJob {
       final ISectionBody body, final IStyles styles,
       final PerInstanceRuns<IFittingResult> results) {
 
-    body.append("We now present all the fitted models: ");//$NON-NLS-1$
-    this.__writeResults(body, styles, results.getAll(), false, false);
+    this.__writeContents(body, styles, results.getAll(), null,
+        this.m_overall);
   }
 
   /**
@@ -349,9 +362,6 @@ final class _ModelingJob extends ExperimentSetJob {
       final PerInstanceRuns<IFittingResult> results) {
     Map.Entry<IInstanceRuns, IFittingResult>[] list;
 
-    body.append(
-        "We now present the fitted models for each algorithm setup.");//$NON-NLS-1$
-
     for (final IExperiment experiment : data.getData()) {
       list = results.getAllForExperiment(experiment);
       if ((list != null) && (list.length > 0)) {
@@ -360,7 +370,8 @@ final class _ModelingJob extends ExperimentSetJob {
             experiment.printShortName(subtitle, ETextCase.AT_TITLE_START);
           }
           try (final ISectionBody subbody = subsection.body()) {
-            this.__writeResults(subbody, styles, list, false, true);
+            this.__writeContents(subbody, styles, list, experiment,
+                this.m_perAlgorithm);
           }
         }
       }
@@ -371,7 +382,7 @@ final class _ModelingJob extends ExperimentSetJob {
    * Write the results per algorithm
    *
    * @param data
-   *          the experiment et
+   *          the experiment set
    * @param body
    *          the body
    * @param styles
@@ -384,9 +395,6 @@ final class _ModelingJob extends ExperimentSetJob {
       final PerInstanceRuns<IFittingResult> results) {
     Map.Entry<IInstanceRuns, IFittingResult>[] list;
 
-    body.append(
-        "We now present the fitted models for each benchmark instance.");//$NON-NLS-1$
-
     for (final IInstance instance : data.getInstances().getData()) {
       list = results.getAllForInstance(instance);
       if ((list != null) && (list.length > 0)) {
@@ -395,10 +403,38 @@ final class _ModelingJob extends ExperimentSetJob {
             instance.printShortName(subtitle, ETextCase.AT_TITLE_START);
           }
           try (final ISectionBody subbody = subsection.body()) {
-            this.__writeResults(subbody, styles, list, true, false);
+            this.__writeContents(subbody, styles, list, instance,
+                this.m_perInstance);
           }
         }
       }
+    }
+  }
+
+  /**
+   * Render the contents
+   *
+   * @param results
+   *          the results
+   * @param body
+   *          the body
+   * @param styles
+   *          the provided styles
+   * @param component
+   *          the semantic component
+   * @param info
+   *          the information to present
+   */
+  private final void __writeContents(final ISectionBody body,
+      final IStyles styles,
+      final Map.Entry<IInstanceRuns, IFittingResult>[] results,
+      final ISemanticComponent component, final EModelInfo info) {
+
+    if (info.m_printStatistics) {
+      this.__writeStatistics(body, styles, results, component);
+    }
+    if (info.m_printModels) {
+      this.__writeResults(body, styles, results, component);
     }
   }
 
@@ -411,24 +447,46 @@ final class _ModelingJob extends ExperimentSetJob {
    *          the body
    * @param styles
    *          the provided styles
-   * @param groupedByInstance
-   *          print the instance name
-   * @param groupedByAlgorithm
-   *          print the algorithm setup name
+   * @param component
+   *          the semantic component
    */
   private final void __writeResults(final ISectionBody body,
       final IStyles styles,
       final Map.Entry<IInstanceRuns, IFittingResult>[] results,
-      final boolean groupedByInstance, final boolean groupedByAlgorithm) {
+      final ISemanticComponent component) {
     final int nparams;
+    final boolean groupedByInstance, groupedByAlgorithm;
     IFittingResult result;
     ParametricUnaryFunction function;
     IInstanceRuns runs;
 
+    if (component != null) {
+      if (component instanceof IInstance) {
+        body.append(
+            "We now present the fitted models for each algorithm setup which was applied to benchmark instance ");//$NON-NLS-1$
+        component.printShortName(body, ETextCase.IN_SENTENCE);
+        body.append('.');
+        nparams = 2;
+        groupedByInstance = true;
+        groupedByAlgorithm = false;
+      } else {
+        body.append(
+            "We now present the fitted models for each benchmark instance to which algorithm setup ");//$NON-NLS-1$
+        component.printShortName(body, ETextCase.IN_SENTENCE);
+        body.append("was applied.");//$NON-NLS-1$
+        nparams = 2;
+        groupedByAlgorithm = true;
+        groupedByInstance = false;
+      }
+    } else {
+      body.append("We now present all the fitted models: ");//$NON-NLS-1$
+      nparams = 3;
+      groupedByAlgorithm = groupedByInstance = false;
+    }
+
     try (final IMath math = body.inlineMath()) {
       try (final IMath approx = math
           .compare(EMathComparison.APPROXIMATELY)) {
-        nparams = ((groupedByInstance ? 2 : (groupedByAlgorithm ? 2 : 3)));
         try (final IMath func = approx.nAryFunction(this.m_dimY.getName(),
             nparams, nparams)) {
 
@@ -476,6 +534,208 @@ final class _ModelingJob extends ExperimentSetJob {
                   this.m_dimX);
             }
           }
+        }
+      }
+    }
+  }
+
+  /**
+   * Render a list of results
+   *
+   * @param results
+   *          the results
+   * @param body
+   *          the body
+   * @param styles
+   *          the provided styles
+   * @param component
+   *          the component to render
+   */
+  private final void __writeStatistics(final ISectionBody body,
+      final IStyles styles,
+      final Map.Entry<IInstanceRuns, IFittingResult>[] results,
+      final ISemanticComponent component) {
+    final __InfoRecord[] records;
+    final ILabel[] labels;
+    int index;
+
+    records = this.__getStatisticsTables(body, styles, results);
+    index = records.length;
+
+    body.append(
+        "We first present statistics summarizing the parameters of the ");//$NON-NLS-1$
+    InTextNumberAppender.INSTANCE.appendTo(index, ETextCase.IN_SENTENCE,
+        body);
+    body.append(" models that fit to ");//$NON-NLS-1$
+    if (component != null) {
+      body.append("the run sets in ");//$NON-NLS-1$
+      if (component instanceof IExperiment) {
+        body.append("algorithm setup ");//$NON-NLS-1$
+        component.printShortName(body, ETextCase.IN_SENTENCE);
+        body.append(" on any benchmark instance");//$NON-NLS-1$
+      } else {
+        if (component instanceof IExperiment) {
+          body.append("benchmark instance ");//$NON-NLS-1$
+          component.printShortName(body, ETextCase.IN_SENTENCE);
+          body.append(" on for any algorithm setup");//$NON-NLS-1$
+        }
+      }
+    } else {
+      body.append("any runs set");//$NON-NLS-1$
+    }
+    body.append(" in "); //$NON-NLS-1$
+
+    labels = new ILabel[index];
+    for (; (--index) >= 0;) {
+      labels[index] = records[index].m_label;
+    }
+
+    body.reference(ETextCase.IN_SENTENCE, ESequenceMode.AND, labels);
+    body.append('.');
+    for (final __InfoRecord record : records) {
+      this.__writeStatisticsTable(body, styles, record);
+    }
+  }
+
+  /**
+   * Render a lists of statistics
+   *
+   * @param results
+   *          the results
+   * @param body
+   *          the body
+   * @param styles
+   *          the provided styles
+   * @return the information records
+   */
+  private final __InfoRecord[] __getStatisticsTables(
+      final ISectionBody body, final IStyles styles,
+      final Map.Entry<IInstanceRuns, IFittingResult>[] results) {
+    final HashMap<ParametricUnaryFunction, StatisticInfoBuilder[]> builderMap;
+    final __InfoRecord[] records;
+    IFittingResult result;
+    StatisticInfoBuilder[] builders;
+    IStatisticInfo[] infos;
+    ParametricUnaryFunction function;
+    double[] fitting;
+    int index, recordIndex;
+
+    builderMap = new HashMap<>();
+    for (final Map.Entry<IInstanceRuns, IFittingResult> resultRec : results) {
+      result = resultRec.getValue();
+      function = result.getFittedFunction();
+      builders = builderMap.get(function);
+      if (builders == null) {
+        index = function.getParameterCount();
+        builders = new StatisticInfoBuilder[index];
+        builderMap.put(function, builders);
+        for (; (--index) >= 0;) {
+          builders[index] = new StatisticInfoBuilder();
+        }
+      }
+      fitting = result.getFittedParametersRef();
+      for (index = builders.length; (--index) >= 0;) {
+        builders[index].append(fitting[index]);
+      }
+    }
+
+    recordIndex = 0;
+    records = new __InfoRecord[builderMap.size()];
+    outer: for (final ParametricUnaryFunction functionx : this
+        .__models()) {
+      builders = builderMap.remove(functionx);
+      if (builders == null) {
+        continue outer;
+      }
+      infos = new IStatisticInfo[builders.length];
+      for (index = infos.length; (--index) >= 0;) {
+        infos[index] = builders[index].build();
+        builders[index] = null;
+      }
+      builders = null;
+
+      records[recordIndex++] = new __InfoRecord(functionx, infos,
+          body.createLabel(ELabelType.TABLE));
+    }
+
+    return records;
+  }
+
+  /**
+   * Render a lists of statistics
+   *
+   * @param body
+   *          the body
+   * @param styles
+   *          the provided styles
+   * @param record
+   *          the record to print
+   */
+  private final void __writeStatisticsTable(final ISectionBody body,
+      final IStyles styles, final __InfoRecord record) {
+    ETableCellDef[] defs;
+    int columnIndex, rowIndex;
+
+    defs = new ETableCellDef[record.m_information.length + 1];
+    Arrays.fill(defs, ETableCellDef.RIGHT);
+    defs[0] = ETableCellDef.LEFT;
+
+    try (final ITable table = body.table(record.m_label, false, defs)) {
+      try (final IComplexText caption = table.caption()) {
+        caption.append("Statistical information about the ");//$NON-NLS-1$
+        InTextNumberAppender.INSTANCE.appendTo(record.m_information.length,
+            ETextCase.IN_SENTENCE, caption);
+        caption.append(" parameters of each of the ");//$NON-NLS-1$
+        InTextNumberAppender.INSTANCE.appendTo(
+            record.m_information[0].getSampleSize(), ETextCase.IN_SENTENCE,
+            caption);
+        caption.append(" cases where model ");//$NON-NLS-1$
+        try (final IComplexText text = caption
+            .style(_ModelingJob.__modelColor(styles, record.m_function))) {
+          try (final IMath math = text.inlineMath()) {
+            record.m_function.mathRender(math, _ModelingJob.RENDERER);
+          }
+        }
+        caption.append(" fit to describe how ");//$NON-NLS-1$
+        this.m_dimY.printShortName(body, ETextCase.IN_SENTENCE);
+        caption.append(" progresses over ");//$NON-NLS-1$
+        this.m_dimX.printShortName(body, ETextCase.IN_SENTENCE);
+        caption.append('.');
+      }
+
+      try (final ITableSection header = table.header()) {
+        try (final ITableRow row = header.row()) {
+          try (final IComplexText cell = row.cell()) {
+            cell.append("stat");//$NON-NLS-1$
+          }
+          for (columnIndex = 0; columnIndex < record.m_information.length; columnIndex++) {
+            try (final IComplexText cell = row.cell()) {
+              try (final IMath math = cell.inlineMath()) {
+                _ModelingJob.RENDERER.renderParameter(columnIndex, math);
+              }
+            }
+          }
+        }
+      }
+
+      try (final ITableSection tbody = table.body()) {
+        for (rowIndex = StatisticInfoPrinter.TABLE_FIRST_ROW; rowIndex <= StatisticInfoPrinter.TABLE_LAST_ROW; rowIndex++) {
+          try (final ITableRow row = tbody.row()) {
+            try (final IComplexText cell = row.cell()) {
+              StatisticInfoPrinter.tableRowHead(rowIndex, cell);
+            }
+            for (columnIndex = 0; columnIndex < record.m_information.length; columnIndex++) {
+              try (final IComplexText cell = row.cell()) {
+                StatisticInfoPrinter.tableRowValue(rowIndex,
+                    record.m_information[columnIndex],
+                    _ModelingJob.APPENDER, cell);
+              }
+            }
+          }
+        }
+
+        try (final ITableSection footer = table.footer()) {
+          //
         }
       }
     }
@@ -537,6 +797,34 @@ final class _ModelingJob extends ExperimentSetJob {
               _ModelingJob.this.m_dimX);
         }
       }
+    }
+  }
+
+  /** the information record */
+  private static final class __InfoRecord {
+    /** the function */
+    final ParametricUnaryFunction m_function;
+    /** the information records */
+    final IStatisticInfo[] m_information;
+    /** the label */
+    final ILabel m_label;
+
+    /**
+     * create the information record
+     *
+     * @param function
+     *          the function
+     * @param information
+     *          the information records
+     * @param label
+     *          the label
+     */
+    __InfoRecord(final ParametricUnaryFunction function,
+        final IStatisticInfo[] information, final ILabel label) {
+      super();
+      this.m_function = function;
+      this.m_information = information;
+      this.m_label = label;
     }
   }
 }
