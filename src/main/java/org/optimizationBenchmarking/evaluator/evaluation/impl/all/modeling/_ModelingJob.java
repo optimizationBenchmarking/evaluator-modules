@@ -733,10 +733,10 @@ final class _ModelingJob extends ExperimentSetJob {
             }
           }
         }
+      }
 
-        try (final ITableSection footer = table.footer()) {
-          //
-        }
+      try (final ITableSection footer = table.footer()) {
+        //
       }
     }
   }
