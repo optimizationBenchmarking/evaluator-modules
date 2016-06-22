@@ -51,6 +51,7 @@
 			description="Print all information that can be presented about the models. This may be a lot of text." />
 	</cd:instance>
 
-
+	<cd:inherit
+		class="org.optimizationBenchmarking.evaluator.attributes.clusters.ClustererLoader" />
 
 </cd:configurationDefinition>

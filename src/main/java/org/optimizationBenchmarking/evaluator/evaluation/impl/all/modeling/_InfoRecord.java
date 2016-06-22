@@ -2,6 +2,7 @@ package org.optimizationBenchmarking.evaluator.evaluation.impl.all.modeling;
 
 import java.util.Arrays;
 
+import org.optimizationBenchmarking.evaluator.attributes.clusters.ICluster;
 import org.optimizationBenchmarking.utils.document.spec.ETableCellDef;
 import org.optimizationBenchmarking.utils.document.spec.IComplexText;
 import org.optimizationBenchmarking.utils.document.spec.ILabel;
@@ -24,6 +25,8 @@ final class _InfoRecord {
   final IStatisticInfo[] m_information;
   /** the label */
   final ILabel m_label;
+  /** the cluster */
+  final ICluster m_cluster;
 
   /**
    * create the information record
@@ -34,9 +37,11 @@ final class _InfoRecord {
    *          the information records
    * @param label
    *          the label
+   * @param cluster
+   *          the cluster
    */
   _InfoRecord(final _Model model, final IStatisticInfo[] information,
-      final ILabel label) {
+      final ILabel label, final ICluster cluster) {
     super();
     if (model == null) {
       throw new IllegalArgumentException("Model cannot be null."); //$NON-NLS-1$
@@ -55,6 +60,7 @@ final class _InfoRecord {
     this.m_model = model;
     this.m_information = information;
     this.m_label = label;
+    this.m_cluster = cluster;
   }
 
   /**
@@ -74,7 +80,6 @@ final class _InfoRecord {
     Arrays.fill(defs, ETableCellDef.RIGHT);
     defs[0] = ETableCellDef.LEFT;
     try (final ITable table = body.table(this.m_label, false, defs)) {
-
       try (final IComplexText caption = table.caption()) {
         caption.append("Statistical information about the ");//$NON-NLS-1$
         InTextNumberAppender.INSTANCE.appendTo(this.m_information.length,
@@ -89,6 +94,10 @@ final class _InfoRecord {
         y.printShortName(caption, ETextCase.IN_SENTENCE);
         caption.append(" progresses over ");//$NON-NLS-1$
         this.m_model.m_x.printShortName(caption, ETextCase.IN_SENTENCE);
+        if (this.m_cluster != null) {
+          body.append(" in cluster ");//$NON-NLS-1$
+          this.m_cluster.printShortName(body, ETextCase.IN_SENTENCE);
+        }
         caption.append('.');
       }
 

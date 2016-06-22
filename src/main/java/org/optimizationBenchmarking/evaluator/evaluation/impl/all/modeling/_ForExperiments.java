@@ -39,17 +39,21 @@ final class _ForExperiments extends _Section {
   @Override
   final ETextCase _printSelection(final IComplexText text,
       final ISemanticComponent selection, final ETextCase textCase) {
-    return selection.printShortName(text,
-        textCase.appendWords("algorithm setup ", //$NON-NLS-1$
-            text));
+    final ETextCase next;
+    next = textCase.appendWords("algorithm setup", text); //$NON-NLS-1$
+    text.append(' ');
+    return selection.printShortName(text, next);
   }
 
   /** {@inheritDoc} */
   @Override
   final ETextCase _printSelectionFull(final IComplexText text,
       final ISemanticComponent selection, final ETextCase textCase) {
-    return this._printSelection(text, selection, textCase)//
-        .appendWords(" on any benchmark instance", text);//$NON-NLS-1$
+    final ETextCase next;
+
+    next = this._printSelection(text, selection, textCase);
+    text.append(' ');
+    return next.appendWords(" on any benchmark instance", text);//$NON-NLS-1$
   }
 
   /** {@inheritDoc} */
@@ -59,7 +63,7 @@ final class _ForExperiments extends _Section {
     text.append(
         "We now list the fitted models for each benchmark instance to which algorithm setup ");//$NON-NLS-1$
     selection.printShortName(text, ETextCase.IN_SENTENCE);
-    text.append("was applied.");//$NON-NLS-1$
+    text.append(" was applied.");//$NON-NLS-1$
   }
 
   /** {@inheritDoc} */
@@ -92,10 +96,10 @@ final class _ForExperiments extends _Section {
   /** {@inheritDoc} */
   @Override
   final void _writeSectionBody(final boolean isNewSection,
-      final ISectionBody body, final IExperimentSet data,
+      final ISectionBody body,
       final PerInstanceRuns<IFittingResult> results) {
     Map.Entry<IInstanceRuns, IFittingResult>[] list;
-    for (final IExperiment experiment : data.getData()) {
+    for (final IExperiment experiment : this.m_data.getData()) {
       list = results.getAllForExperiment(experiment);
       if ((list != null) && (list.length > 0)) {
         this._writeSubSectionFor(body, experiment, list);

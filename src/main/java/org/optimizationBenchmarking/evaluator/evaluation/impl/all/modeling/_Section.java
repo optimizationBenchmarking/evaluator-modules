@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.optimizationBenchmarking.evaluator.attributes.PerInstanceRuns;
+import org.optimizationBenchmarking.evaluator.attributes.clusters.ICluster;
 import org.optimizationBenchmarking.evaluator.data.spec.IExperimentSet;
 import org.optimizationBenchmarking.evaluator.data.spec.IInstanceRuns;
 import org.optimizationBenchmarking.utils.document.spec.ELabelType;
@@ -129,7 +130,9 @@ abstract class _Section extends _AbstractSection {
       builders = null;
 
       records[recordIndex++] = new _InfoRecord(model, infos,
-          body.createLabel(ELabelType.TABLE));
+          body.createLabel(ELabelType.TABLE),
+          ((this.m_data instanceof ICluster) ? ((ICluster) (this.m_data))
+              : null));
     }
 
     return records;

@@ -39,17 +39,20 @@ final class _ForInstances extends _Section {
   @Override
   final ETextCase _printSelection(final IComplexText text,
       final ISemanticComponent selection, final ETextCase textCase) {
-    return selection.printShortName(text,
-        textCase.appendWords("benchmark instance ", //$NON-NLS-1$
-            text));
+    final ETextCase next;
+    next = textCase.appendWords("benchmark instance", text);//$NON-NLS-1$
+    text.append(' ');
+    return selection.printShortName(text, next);
   }
 
   /** {@inheritDoc} */
   @Override
   final ETextCase _printSelectionFull(final IComplexText text,
       final ISemanticComponent selection, final ETextCase textCase) {
-    return this._printSelection(text, selection, textCase)//
-        .appendWords(" for any algorithm setup", text);//$NON-NLS-1$
+    final ETextCase next;
+    next = this._printSelection(text, selection, textCase);
+    text.append(' ');
+    return next.appendWords("for any algorithm setup", text);//$NON-NLS-1$
   }
 
   /** {@inheritDoc} */
@@ -109,10 +112,10 @@ final class _ForInstances extends _Section {
   /** {@inheritDoc} */
   @Override
   final void _writeSectionBody(final boolean isNewSection,
-      final ISectionBody body, final IExperimentSet data,
+      final ISectionBody body,
       final PerInstanceRuns<IFittingResult> results) {
     Map.Entry<IInstanceRuns, IFittingResult>[] list;
-    for (final IInstance instance : data.getInstances().getData()) {
+    for (final IInstance instance : this.m_data.getInstances().getData()) {
       list = results.getAllForInstance(instance);
       if ((list != null) && (list.length > 0)) {
         this._writeSubSectionFor(body, instance, list);

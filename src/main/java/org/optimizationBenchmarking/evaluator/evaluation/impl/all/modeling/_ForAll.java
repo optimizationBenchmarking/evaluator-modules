@@ -80,7 +80,7 @@ final class _ForAll extends _Section {
   /** {@inheritDoc} */
   @Override
   final void _writeSectionBody(final boolean isNewSection,
-      final ISectionBody body, final IExperimentSet data,
+      final ISectionBody body,
       final PerInstanceRuns<IFittingResult> results) {
     this._writeSubSectionFor(body, null, results.getAll());
   }

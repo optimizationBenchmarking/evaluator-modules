@@ -3,9 +3,12 @@ package org.optimizationBenchmarking.evaluator.evaluation.impl.all.modeling;
 import java.util.LinkedHashMap;
 import java.util.logging.Logger;
 
-import org.optimizationBenchmarking.evaluator.attributes.PerInstanceRuns;
+import org.optimizationBenchmarking.evaluator.attributes.clusters.ClustererLoader;
+import org.optimizationBenchmarking.evaluator.attributes.clusters.ICluster;
+import org.optimizationBenchmarking.evaluator.attributes.clusters.IClustering;
 import org.optimizationBenchmarking.evaluator.attributes.modeling.DimensionRelationship;
 import org.optimizationBenchmarking.evaluator.attributes.modeling.DimensionRelationshipModels;
+import org.optimizationBenchmarking.evaluator.data.spec.Attribute;
 import org.optimizationBenchmarking.evaluator.data.spec.IDimension;
 import org.optimizationBenchmarking.evaluator.data.spec.IDimensionSet;
 import org.optimizationBenchmarking.evaluator.data.spec.IExperimentSet;
@@ -25,7 +28,6 @@ import org.optimizationBenchmarking.utils.document.spec.ISectionBody;
 import org.optimizationBenchmarking.utils.document.spec.ISectionContainer;
 import org.optimizationBenchmarking.utils.graphics.style.spec.IStyles;
 import org.optimizationBenchmarking.utils.math.text.ABCParameterRenderer;
-import org.optimizationBenchmarking.utils.ml.fitting.spec.IFittingResult;
 import org.optimizationBenchmarking.utils.ml.fitting.spec.ParametricUnaryFunction;
 import org.optimizationBenchmarking.utils.text.ESequenceMode;
 import org.optimizationBenchmarking.utils.text.ETextCase;
@@ -48,17 +50,19 @@ final class _ModelingJob extends ExperimentSetJob {
   final IDimension m_dimY;
 
   /** the dimension relationship attribute */
-  private final DimensionRelationship m_attribute;
+  final DimensionRelationship m_attribute;
 
   /** the model set */
   final LinkedHashMap<ParametricUnaryFunction, _Model> m_models;
 
   /** Overall, unsorted printing */
-  private final EModelInfo m_overall;
+  final EModelInfo m_overall;
   /** Should we list the models per algorithm? */
-  private final EModelInfo m_perAlgorithm;
+  final EModelInfo m_perAlgorithm;
   /** Should we list the models per benchmark instance? */
-  private final EModelInfo m_perInstance;
+  final EModelInfo m_perInstance;
+  /** the clusterer, or {@code null} if none was requested */
+  private final Attribute<? super IExperimentSet, ? extends IClustering> m_clusterer;
 
   /**
    * Create the modeling job
@@ -109,6 +113,8 @@ final class _ModelingJob extends ExperimentSetJob {
         ((this.m_perAlgorithm == EModelInfo.NONE)
             && (this.m_perInstance == EModelInfo.NONE))//
                 ? EModelInfo.STATISTICS_ONLY : EModelInfo.NONE);
+
+    this.m_clusterer = ClustererLoader.configureClustering(data, config);
   }
 
   /** {@inheritDoc} */
@@ -133,10 +139,7 @@ final class _ModelingJob extends ExperimentSetJob {
   protected final void doMain(final IExperimentSet data,
       final ISectionContainer sectionContainer, final Logger logger) {
     final IStyles styles;
-    final int sections;
-    final PerInstanceRuns<IFittingResult> results;
-
-    results = new PerInstanceRuns<>(data, this.m_attribute, logger);
+    IClustering clustering;
 
     try (final ISection section = sectionContainer.section(null)) {
       styles = section.getStyles();
@@ -148,26 +151,25 @@ final class _ModelingJob extends ExperimentSetJob {
         title.append(" per Benchmark Instance"); //$NON-NLS-1$
       }
       try (final ISectionBody body = section.body()) {
-        this.__writeIntro(data, body, styles);
-
-        sections = ((this.m_overall != EModelInfo.NONE) ? 1 : 0) + //
-            ((this.m_perAlgorithm != EModelInfo.NONE) ? 1 : 0) + //
-            ((this.m_perInstance != EModelInfo.NONE) ? 1 : 0);//
-
-        if (this.m_overall != EModelInfo.NONE) {
-          OptionalElements.optionalSection(body, (sections > 1), null, //
-              new _ForAll(data, results, this.m_overall, this));
+        if (this.m_clusterer != null) {
+          clustering = this.m_clusterer.get(data, logger);
+          if (clustering.getData().size() <= 1) {
+            clustering = null;
+          }
+        } else {
+          clustering = null;
         }
 
-        if (this.m_perAlgorithm != EModelInfo.NONE) {
-          OptionalElements.optionalSection(body, (sections > 1), null, //
-              new _ForExperiments(data, results, this.m_perAlgorithm,
-                  this));
-        }
+        this.__writeIntro(data, clustering, body, styles);
 
-        if (this.m_perInstance != EModelInfo.NONE) {
-          OptionalElements.optionalSection(body, (sections > 1), null, //
-              new _ForInstances(data, results, this.m_perInstance, this));
+        if (clustering != null) {
+          for (final ICluster cluster : clustering.getData()) {
+            OptionalElements.optionalSection(body, true, null,
+                new _ForExperimentSet(this, cluster, logger));
+          }
+        } else {
+          OptionalElements.optionalSection(body, false, null,
+              new _ForExperimentSet(this, data, logger));
         }
       }
     }
@@ -178,13 +180,16 @@ final class _ModelingJob extends ExperimentSetJob {
    *
    * @param data
    *          the data
+   * @param clustering
+   *          the clustering
    * @param body
    *          the body
    * @param styles
    *          the provided styles
    */
   private final void __writeIntro(final IExperimentSet data,
-      final ISectionBody body, final IStyles styles) {
+      final IClustering clustering, final ISectionBody body,
+      final IStyles styles) {
 
     body.append(
         "In order to better understand the behavior of the investigated algorithms, we try to fit models, i.e., mathematical functions, to their behavior.");//$NON-NLS-1$
@@ -213,9 +218,14 @@ final class _ModelingJob extends ExperimentSetJob {
     this.m_dimX.printShortName(body, ETextCase.IN_SENTENCE);
     body.append('.');
 
+    if (clustering != null) {
+      body.appendLineBreak();
+      clustering.printDescription(body, ETextCase.AT_SENTENCE_START);
+    }
+
     body.appendLineBreak();
 
-    body.append("Obviously, we cannot know the nature of ");//$NON-NLS-1$
+    body.append("Obviously, we cannot know the nature of the models ");//$NON-NLS-1$
     try (final IMath rootMath = body.inlineMath()) {
       try (final IMath func = rootMath.nAryFunction("f", 1, 1)) {//$NON-NLS-1$
         try (final IMath braces = func.inBraces()) {
@@ -224,7 +234,7 @@ final class _ModelingJob extends ExperimentSetJob {
       }
     }
     body.append(
-        " in advance, which complicates things. However, many optimization algorithms have behaviors which fit to similar ");//$NON-NLS-1$
+        " that we will fit in advance, which complicates things. However, many optimization algorithms have behaviors which fit to similar ");//$NON-NLS-1$
     try (final IPlainText quotes = body.inQuotes()) {
       quotes.append("categories.");//$NON-NLS-1$
     }

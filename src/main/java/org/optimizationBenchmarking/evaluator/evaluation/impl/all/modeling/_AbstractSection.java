@@ -20,7 +20,7 @@ import org.optimizationBenchmarking.utils.ml.fitting.spec.IFittingResult;
 abstract class _AbstractSection extends OptionalSection {
 
   /** the data set */
-  private final IExperimentSet m_data;
+  final IExperimentSet m_data;
   /** the results */
   private final PerInstanceRuns<IFittingResult> m_results;
 
@@ -64,11 +64,9 @@ abstract class _AbstractSection extends OptionalSection {
    *          the section body
    * @param results
    *          the results to select from
-   * @param data
-   *          the data set
    */
   abstract void _writeSectionBody(final boolean isNewSection,
-      final ISectionBody body, final IExperimentSet data,
+      final ISectionBody body,
       final PerInstanceRuns<IFittingResult> results);
 
   /** {@inheritDoc} */
@@ -78,8 +76,7 @@ abstract class _AbstractSection extends OptionalSection {
     if (!(isNewSection)) {
       body.appendLineBreak();
     }
-    this._writeSectionBody(isNewSection, body, this.m_data,
-        this.m_results);
+    this._writeSectionBody(isNewSection, body, this.m_results);
     if (this.m_cachedResuls != null) {
       try {
         this.__doWriteSubSection(body, this.m_cachedSelection,
@@ -105,21 +102,21 @@ abstract class _AbstractSection extends OptionalSection {
       final ISemanticComponent selection,
       final Map.Entry<IInstanceRuns, IFittingResult>[] results) {
     if (!(this.m_hasMultipleContents)) {
-      this.m_cachedSelection = selection;
-      this.m_cachedResuls = results;
-    } else {
-      if (this.m_cachedResuls != null) {
-        this.m_hasMultipleContents = true;
-        try {
-          this.__doWriteSubSection(body, this.m_cachedSelection,
-              this.m_cachedResuls);
-        } finally {
-          this.m_cachedResuls = null;
-          this.m_cachedSelection = null;
-        }
+      if (this.m_cachedSelection == null) {
+        this.m_cachedSelection = selection;
+        this.m_cachedResuls = results;
+        return;
       }
-      this.__doWriteSubSection(body, selection, results);
+      this.m_hasMultipleContents = true;
+      try {
+        this.__doWriteSubSection(body, this.m_cachedSelection,
+            this.m_cachedResuls);
+      } finally {
+        this.m_cachedResuls = null;
+        this.m_cachedSelection = null;
+      }
     }
+    this.__doWriteSubSection(body, selection, results);
   }
 
   /**
