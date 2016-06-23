@@ -5,9 +5,10 @@ import java.util.logging.Logger;
 import org.optimizationBenchmarking.evaluator.attributes.PerInstanceRuns;
 import org.optimizationBenchmarking.evaluator.attributes.clusters.ICluster;
 import org.optimizationBenchmarking.evaluator.data.spec.IExperimentSet;
+import org.optimizationBenchmarking.utils.collections.iterators.BasicIterator;
+import org.optimizationBenchmarking.utils.document.impl.OptionalElements;
+import org.optimizationBenchmarking.utils.document.impl.OptionalSection;
 import org.optimizationBenchmarking.utils.document.impl.SemanticComponentUtils;
-import org.optimizationBenchmarking.utils.document.impl.optional.OptionalElements;
-import org.optimizationBenchmarking.utils.document.impl.optional.OptionalSection;
 import org.optimizationBenchmarking.utils.document.spec.IComplexText;
 import org.optimizationBenchmarking.utils.document.spec.ISectionBody;
 import org.optimizationBenchmarking.utils.ml.fitting.spec.IFittingResult;
@@ -17,13 +18,13 @@ import org.optimizationBenchmarking.utils.text.ETextCase;
 final class _ForExperimentSet extends OptionalSection {
 
   /** the owning job */
-  private final _ModelingJob m_job;
+  final _ModelingJob m_job;
 
   /** the data */
-  private final IExperimentSet m_data;
+  final IExperimentSet m_data;
 
   /** the logger */
-  private final Logger m_logger;
+  final Logger m_logger;
 
   /**
    * create the experiment set job
@@ -81,9 +82,6 @@ final class _ForExperimentSet extends OptionalSection {
   @Override
   public void writeSectionBody(final boolean isNewSection,
       final ISectionBody body) {
-    final int sections;
-    final PerInstanceRuns<IFittingResult> results;
-
     if (!(isNewSection)) {
       body.append(' ');
     }
@@ -91,29 +89,72 @@ final class _ForExperimentSet extends OptionalSection {
       this.__printClusterInfo(((ICluster) (this.m_data)), body);
     }
 
-    results = new PerInstanceRuns<>(this.m_data, this.m_job.m_attribute,
-        this.m_logger);
+    OptionalElements.optionalSections(body, null,
+        new __PartIterator(new PerInstanceRuns<>(this.m_data,
+            this.m_job.m_attribute, this.m_logger)));
+  }
 
-    sections = ((this.m_job.m_overall != EModelInfo.NONE) ? 1 : 0) + //
-        ((this.m_job.m_perAlgorithm != EModelInfo.NONE) ? 1 : 0) + //
-        ((this.m_job.m_perInstance != EModelInfo.NONE) ? 1 : 0);//
+  /** an iterator for optional sections */
+  private final class __PartIterator
+      extends BasicIterator<OptionalSection> {
 
-    if (this.m_job.m_overall != EModelInfo.NONE) {
-      OptionalElements.optionalSection(body, (sections > 1), null, //
-          new _ForAll(this.m_data, results, this.m_job.m_overall,
-              this.m_job));
+    /** the results */
+    private PerInstanceRuns<IFittingResult> m_results;
+    /** the index */
+    private int m_index;
+
+    /**
+     * create the iterator
+     *
+     * @param results
+     *          the results
+     */
+    __PartIterator(final PerInstanceRuns<IFittingResult> results) {
+      super();
+      this.m_results = results;
     }
 
-    if (this.m_job.m_perAlgorithm != EModelInfo.NONE) {
-      OptionalElements.optionalSection(body, (sections > 1), null, //
-          new _ForExperiments(this.m_data, results,
-              this.m_job.m_perAlgorithm, this.m_job));
+    /** {@inheritDoc} */
+    @Override
+    public final boolean hasNext() {
+      return (this.m_index < 3);
     }
 
-    if (this.m_job.m_perInstance != EModelInfo.NONE) {
-      OptionalElements.optionalSection(body, (sections > 1), null, //
-          new _ForInstances(this.m_data, results, this.m_job.m_perInstance,
-              this.m_job));
+    /** {@inheritDoc} */
+    @Override
+    public final OptionalSection next() {
+      PerInstanceRuns<IFittingResult> results;
+      switch (this.m_index++) {
+        case 0: {
+          if (_ForExperimentSet.this.m_job.m_overall == EModelInfo.NONE) {
+            return null;
+          }
+          return new _ForAll(_ForExperimentSet.this.m_data, this.m_results,
+              _ForExperimentSet.this.m_job.m_overall,
+              _ForExperimentSet.this.m_job);
+        }
+        case 1: {
+          if (_ForExperimentSet.this.m_job.m_perAlgorithm == EModelInfo.NONE) {
+            return null;
+          }
+          return new _ForExperiments(_ForExperimentSet.this.m_data,
+              this.m_results, _ForExperimentSet.this.m_job.m_perAlgorithm,
+              _ForExperimentSet.this.m_job);
+        }
+        case 2: {
+          results = this.m_results;
+          this.m_results = null;
+          if (_ForExperimentSet.this.m_job.m_perInstance == EModelInfo.NONE) {
+            return null;
+          }
+          return new _ForInstances(_ForExperimentSet.this.m_data, results,
+              _ForExperimentSet.this.m_job.m_perInstance,
+              _ForExperimentSet.this.m_job);
+        }
+        default: {
+          return super.next();
+        }
+      }
     }
   }
 }

@@ -1,5 +1,6 @@
 package org.optimizationBenchmarking.evaluator.evaluation.impl.all.modeling;
 
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.logging.Logger;
 
@@ -13,10 +14,12 @@ import org.optimizationBenchmarking.evaluator.data.spec.IDimension;
 import org.optimizationBenchmarking.evaluator.data.spec.IDimensionSet;
 import org.optimizationBenchmarking.evaluator.data.spec.IExperimentSet;
 import org.optimizationBenchmarking.evaluator.evaluation.impl.abstr.ExperimentSetJob;
+import org.optimizationBenchmarking.utils.collections.iterators.BasicIterator;
 import org.optimizationBenchmarking.utils.comparison.Compare;
 import org.optimizationBenchmarking.utils.config.Configuration;
+import org.optimizationBenchmarking.utils.document.impl.OptionalElements;
+import org.optimizationBenchmarking.utils.document.impl.OptionalSection;
 import org.optimizationBenchmarking.utils.document.impl.SemanticComponentUtils;
-import org.optimizationBenchmarking.utils.document.impl.optional.OptionalElements;
 import org.optimizationBenchmarking.utils.document.spec.EMathComparison;
 import org.optimizationBenchmarking.utils.document.spec.IComplexText;
 import org.optimizationBenchmarking.utils.document.spec.IDocument;
@@ -163,16 +166,16 @@ final class _ModelingJob extends ExperimentSetJob {
         this.__writeIntro(data, clustering, body, styles);
 
         if (clustering != null) {
-          for (final ICluster cluster : clustering.getData()) {
-            OptionalElements.optionalSection(body, true, null,
-                new _ForExperimentSet(this, cluster, logger));
-          }
+          OptionalElements.optionalSections(body, null,
+              new __ClusterIterator(clustering.getData().iterator(),
+                  logger));
         } else {
           OptionalElements.optionalSection(body, false, null,
               new _ForExperimentSet(this, data, logger));
         }
       }
     }
+
   }
 
   /**
@@ -259,5 +262,42 @@ final class _ModelingJob extends ExperimentSetJob {
         "Since all models are fitted on measured data, there are two sources of errors that may bias the results: First, the measurements may be imprecise. Second, we cannot guarantee that the fitting algorithms will find the globally best fit for a model or even the best model. Thus, all ");//$NON-NLS-1$
     _ModelingJob.APPENDER.printDescription(body, ETextCase.IN_SENTENCE);
     body.append('.');
+  }
+
+  /** an iterator for optional sections */
+  private final class __ClusterIterator
+      extends BasicIterator<OptionalSection> {
+    /** the clustering */
+    private final Iterator<? extends ICluster> m_clusters;
+    /** the logger */
+    private final Logger m_logger;
+
+    /**
+     * create the iterator
+     *
+     * @param clusters
+     *          the clusters
+     * @param logger
+     *          the logger
+     */
+    __ClusterIterator(final Iterator<? extends ICluster> clusters,
+        final Logger logger) {
+      super();
+      this.m_clusters = clusters;
+      this.m_logger = logger;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public final boolean hasNext() {
+      return this.m_clusters.hasNext();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public final OptionalSection next() {
+      return new _ForExperimentSet(_ModelingJob.this,
+          this.m_clusters.next(), this.m_logger);
+    }
   }
 }
