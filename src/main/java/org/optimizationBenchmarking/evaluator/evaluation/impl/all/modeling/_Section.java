@@ -8,6 +8,9 @@ import org.optimizationBenchmarking.evaluator.attributes.PerInstanceRuns;
 import org.optimizationBenchmarking.evaluator.attributes.clusters.ICluster;
 import org.optimizationBenchmarking.evaluator.data.spec.IExperimentSet;
 import org.optimizationBenchmarking.evaluator.data.spec.IInstanceRuns;
+import org.optimizationBenchmarking.evaluator.evaluation.impl.all.modeling._Section._InnerContents;
+import org.optimizationBenchmarking.utils.document.impl.OptionalElements;
+import org.optimizationBenchmarking.utils.document.impl.OptionalSection;
 import org.optimizationBenchmarking.utils.document.spec.ELabelType;
 import org.optimizationBenchmarking.utils.document.spec.EMathComparison;
 import org.optimizationBenchmarking.utils.document.spec.IComplexText;
@@ -25,8 +28,12 @@ import org.optimizationBenchmarking.utils.text.ETextCase;
 import org.optimizationBenchmarking.utils.text.numbers.InTextNumberAppender;
 
 /** the section class for printing contents */
-abstract class _Section extends _AbstractSection {
-
+abstract class _Section extends OptionalSection
+    implements Iterable<_InnerContents> {
+  /** the data set */
+  final IExperimentSet m_data;
+  /** the results */
+  final PerInstanceRuns<IFittingResult> m_results;
   /** the modeling job */
   final _ModelingJob m_job;
   /** the model info */
@@ -47,7 +54,16 @@ abstract class _Section extends _AbstractSection {
   _Section(final IExperimentSet data,
       final PerInstanceRuns<IFittingResult> results, final EModelInfo info,
       final _ModelingJob job) {
-    super(data, results);
+    super();
+    if (data == null) {
+      throw new IllegalArgumentException("IExperimentSet cannot be null."); //$NON-NLS-1$
+    }
+    if (results == null) {
+      throw new IllegalArgumentException(
+          "PerInstanceRuns cannot be null."); //$NON-NLS-1$
+    }
+    this.m_data = data;
+    this.m_results = results;
     if (info == null) {
       throw new IllegalArgumentException(
           "EModelInfo setting cannot be null."); //$NON-NLS-1$
@@ -61,6 +77,39 @@ abstract class _Section extends _AbstractSection {
 
   /** {@inheritDoc} */
   @Override
+  public void writeSectionBody(final boolean isNewSection,
+      final ISectionBody body) {
+    OptionalElements.optionalSections(body, null, this);
+  }
+
+  /**
+   * write the title of a contents section
+   *
+   * @param title
+   *          the title of the contents section
+   * @param selection
+   *          the selection, or {@code null} if nothing was selected
+   * @param results
+   *          the selected results
+   */
+  void _writeSubSectionTitle(final IComplexText title,
+      final ISemanticComponent selection,
+      final Map.Entry<IInstanceRuns, IFittingResult>[] results) {
+    //
+  }
+
+  /**
+   * Write the body of a contents section
+   *
+   * @param isNewSection
+   *          is the section a new section or not?
+   * @param body
+   *          the section body
+   * @param selection
+   *          the selection, or {@code null} if nothing was selected
+   * @param results
+   *          the selected results
+   */
   void _writeSubSectionBody(final boolean isNewSection,
       final ISectionBody body, final ISemanticComponent selection,
       final Entry<IInstanceRuns, IFittingResult>[] results) {
@@ -278,6 +327,44 @@ abstract class _Section extends _AbstractSection {
                   result.getFittedParametersRef());
         }
       }
+    }
+  }
+
+  /** the inner contents */
+  final class _InnerContents extends OptionalSection {
+    /** the selection */
+    private final ISemanticComponent m_innerSelection;
+    /** the results */
+    private final Map.Entry<IInstanceRuns, IFittingResult>[] m_innerResults;
+
+    /**
+     * Write the contents section
+     *
+     * @param selection
+     *          the selection, or {@code null} if nothing was selected
+     * @param results
+     *          the selected results
+     */
+    _InnerContents(final ISemanticComponent selection,
+        final Map.Entry<IInstanceRuns, IFittingResult>[] results) {
+      super();
+      this.m_innerSelection = selection;
+      this.m_innerResults = results;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public final void writeSectionTitle(final IComplexText title) {// empty
+      _Section.this._writeSubSectionTitle(title, this.m_innerSelection,
+          this.m_innerResults);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public final void writeSectionBody(final boolean isNewSection,
+        final ISectionBody body) {// empty
+      _Section.this._writeSubSectionBody(isNewSection, body,
+          this.m_innerSelection, this.m_innerResults);
     }
   }
 }

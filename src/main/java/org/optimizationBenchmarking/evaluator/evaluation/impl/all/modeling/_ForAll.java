@@ -1,11 +1,13 @@
 package org.optimizationBenchmarking.evaluator.evaluation.impl.all.modeling;
 
+import java.util.Iterator;
+
 import org.optimizationBenchmarking.evaluator.attributes.PerInstanceRuns;
 import org.optimizationBenchmarking.evaluator.data.spec.IExperimentSet;
 import org.optimizationBenchmarking.evaluator.data.spec.IInstanceRuns;
+import org.optimizationBenchmarking.utils.collections.iterators.InstanceIterator;
 import org.optimizationBenchmarking.utils.document.spec.IComplexText;
 import org.optimizationBenchmarking.utils.document.spec.IMath;
-import org.optimizationBenchmarking.utils.document.spec.ISectionBody;
 import org.optimizationBenchmarking.utils.document.spec.ISemanticComponent;
 import org.optimizationBenchmarking.utils.ml.fitting.spec.IFittingResult;
 import org.optimizationBenchmarking.utils.text.ETextCase;
@@ -79,15 +81,14 @@ final class _ForAll extends _Section {
 
   /** {@inheritDoc} */
   @Override
-  final void _writeSectionBody(final boolean isNewSection,
-      final ISectionBody body,
-      final PerInstanceRuns<IFittingResult> results) {
-    this._writeSubSectionFor(body, null, results.getAll());
+  public final void writeSectionTitle(final IComplexText title) {
+    title.append("All Models without Grouping"); //$NON-NLS-1$
   }
 
   /** {@inheritDoc} */
   @Override
-  public final void writeSectionTitle(final IComplexText title) {
-    title.append("All Models without Grouping"); //$NON-NLS-1$
+  public final Iterator<_InnerContents> iterator() {
+    return new InstanceIterator<>(
+        new _InnerContents(null, this.m_results.getAll()));
   }
 }

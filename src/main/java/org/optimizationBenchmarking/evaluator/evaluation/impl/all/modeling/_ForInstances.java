@@ -1,5 +1,6 @@
 package org.optimizationBenchmarking.evaluator.evaluation.impl.all.modeling;
 
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -7,6 +8,7 @@ import org.optimizationBenchmarking.evaluator.attributes.PerInstanceRuns;
 import org.optimizationBenchmarking.evaluator.data.spec.IExperimentSet;
 import org.optimizationBenchmarking.evaluator.data.spec.IInstance;
 import org.optimizationBenchmarking.evaluator.data.spec.IInstanceRuns;
+import org.optimizationBenchmarking.utils.collections.iterators.TransformingIterator;
 import org.optimizationBenchmarking.utils.document.spec.IComplexText;
 import org.optimizationBenchmarking.utils.document.spec.IMath;
 import org.optimizationBenchmarking.utils.document.spec.ISectionBody;
@@ -111,21 +113,40 @@ final class _ForInstances extends _Section {
 
   /** {@inheritDoc} */
   @Override
-  final void _writeSectionBody(final boolean isNewSection,
-      final ISectionBody body,
-      final PerInstanceRuns<IFittingResult> results) {
-    Map.Entry<IInstanceRuns, IFittingResult>[] list;
-    for (final IInstance instance : this.m_data.getInstances().getData()) {
-      list = results.getAllForInstance(instance);
-      if ((list != null) && (list.length > 0)) {
-        this._writeSubSectionFor(body, instance, list);
-      }
-    }
+  public final void writeSectionTitle(final IComplexText title) {
+    title.append("Models Grouped by Benchmark Instance"); //$NON-NLS-1$
   }
 
   /** {@inheritDoc} */
   @Override
-  public final void writeSectionTitle(final IComplexText title) {
-    title.append("Models Grouped by Benchmark Instance"); //$NON-NLS-1$
+  public final Iterator<_InnerContents> iterator() {
+    return new _Transform(this.m_data.getData().iterator());
+  }
+
+  /** the transformation from instance to sections */
+  private final class _Transform
+      extends TransformingIterator<IInstance, _InnerContents> {
+    /**
+     * create
+     *
+     * @param inner
+     *          the inner iterator
+     */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    _Transform(final Iterator inner) {
+      super(inner);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected final _InnerContents transform(final IInstance element) {
+      final Map.Entry<IInstanceRuns, IFittingResult>[] list;
+
+      list = _ForInstances.this.m_results.getAllForInstance(element);
+      if ((list != null) && (list.length > 0)) {
+        return new _InnerContents(element, list);
+      }
+      return null;
+    }
   }
 }

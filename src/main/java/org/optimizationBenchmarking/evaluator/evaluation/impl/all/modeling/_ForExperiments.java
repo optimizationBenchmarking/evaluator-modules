@@ -1,5 +1,6 @@
 package org.optimizationBenchmarking.evaluator.evaluation.impl.all.modeling;
 
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -7,6 +8,7 @@ import org.optimizationBenchmarking.evaluator.attributes.PerInstanceRuns;
 import org.optimizationBenchmarking.evaluator.data.spec.IExperiment;
 import org.optimizationBenchmarking.evaluator.data.spec.IExperimentSet;
 import org.optimizationBenchmarking.evaluator.data.spec.IInstanceRuns;
+import org.optimizationBenchmarking.utils.collections.iterators.TransformingIterator;
 import org.optimizationBenchmarking.utils.document.spec.IComplexText;
 import org.optimizationBenchmarking.utils.document.spec.IMath;
 import org.optimizationBenchmarking.utils.document.spec.ISectionBody;
@@ -95,20 +97,6 @@ final class _ForExperiments extends _Section {
 
   /** {@inheritDoc} */
   @Override
-  final void _writeSectionBody(final boolean isNewSection,
-      final ISectionBody body,
-      final PerInstanceRuns<IFittingResult> results) {
-    Map.Entry<IInstanceRuns, IFittingResult>[] list;
-    for (final IExperiment experiment : this.m_data.getData()) {
-      list = results.getAllForExperiment(experiment);
-      if ((list != null) && (list.length > 0)) {
-        this._writeSubSectionFor(body, experiment, list);
-      }
-    }
-  }
-
-  /** {@inheritDoc} */
-  @Override
   final void _writeSubSectionBody(final boolean isNewSection,
       final ISectionBody body, final ISemanticComponent selection,
       final Entry<IInstanceRuns, IFittingResult>[] results) {
@@ -127,5 +115,38 @@ final class _ForExperiments extends _Section {
   @Override
   public final void writeSectionTitle(final IComplexText title) {
     title.append("Models Grouped by Algorithm Setup"); //$NON-NLS-1$
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public final Iterator<_InnerContents> iterator() {
+    return new _Transform(this.m_data.getData().iterator());
+  }
+
+  /** the transformation from experiment to sections */
+  private final class _Transform
+      extends TransformingIterator<IExperiment, _InnerContents> {
+    /**
+     * create
+     *
+     * @param inner
+     *          the inner iterator
+     */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    _Transform(final Iterator inner) {
+      super(inner);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected final _InnerContents transform(final IExperiment element) {
+      final Map.Entry<IInstanceRuns, IFittingResult>[] list;
+
+      list = _ForExperiments.this.m_results.getAllForExperiment(element);
+      if ((list != null) && (list.length > 0)) {
+        return new _InnerContents(element, list);
+      }
+      return null;
+    }
   }
 }
