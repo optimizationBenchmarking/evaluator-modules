@@ -115,11 +115,11 @@ abstract class _Section extends OptionalSection
       final Entry<IInstanceRuns, IFittingResult>[] results) {
     if (this.m_info.m_printStatistics) {
       this.__writeStatistics(body, selection, results);
-    }
-    if (this.m_info.m_printModels) {
-      if (this.m_info.m_printStatistics) {
+      if (this.m_info.m_printModels) {
         body.append(' ');
       }
+    }
+    if (this.m_info.m_printModels) {
       this.__writeResults(body, selection, results);
     }
   }

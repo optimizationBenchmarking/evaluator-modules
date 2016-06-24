@@ -95,16 +95,20 @@ final class _InfoRecord {
         caption.append(" progresses over ");//$NON-NLS-1$
         this.m_model.m_x.printShortName(caption, ETextCase.IN_SENTENCE);
         if (this.m_cluster != null) {
-          body.append(" in cluster ");//$NON-NLS-1$
-          this.m_cluster.printShortName(body, ETextCase.IN_SENTENCE);
+          caption.append(" in cluster ");//$NON-NLS-1$
+          this.m_cluster.printShortName(caption, ETextCase.IN_SENTENCE);
         }
         caption.append('.');
+        caption.append(' ');
+        caption.append('(');
+        StatisticInfoPrinter.tableRowDescriptions(caption);
+        caption.append(')');
       }
 
       try (final ITableSection header = table.header()) {
         try (final ITableRow row = header.row()) {
           try (final IComplexText cell = row.cell()) {
-            cell.append("stat");//$NON-NLS-1$
+            cell.append("Statistic");//$NON-NLS-1$
           }
           for (columnIndex = 0; columnIndex < this.m_information.length; columnIndex++) {
             try (final IComplexText cell = row.cell()) {
