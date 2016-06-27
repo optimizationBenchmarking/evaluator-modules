@@ -120,7 +120,7 @@ final class _ForInstances extends _Section {
   /** {@inheritDoc} */
   @Override
   public final Iterator<_InnerContents> iterator() {
-    return new _Transform(this.m_data.getData().iterator());
+    return new _Transform(this.m_data.getInstances().getData().iterator());
   }
 
   /** the transformation from instance to sections */
