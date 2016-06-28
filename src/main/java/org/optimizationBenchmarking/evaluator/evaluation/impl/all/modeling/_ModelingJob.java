@@ -17,8 +17,8 @@ import org.optimizationBenchmarking.evaluator.evaluation.impl.abstr.ExperimentSe
 import org.optimizationBenchmarking.utils.collections.iterators.BasicIterator;
 import org.optimizationBenchmarking.utils.comparison.Compare;
 import org.optimizationBenchmarking.utils.config.Configuration;
-import org.optimizationBenchmarking.utils.document.impl.OptionalElements;
-import org.optimizationBenchmarking.utils.document.impl.OptionalSection;
+import org.optimizationBenchmarking.utils.document.impl.Renderers;
+import org.optimizationBenchmarking.utils.document.impl.SectionRenderer;
 import org.optimizationBenchmarking.utils.document.impl.SemanticComponentUtils;
 import org.optimizationBenchmarking.utils.document.spec.EMathComparison;
 import org.optimizationBenchmarking.utils.document.spec.IComplexText;
@@ -166,11 +166,10 @@ final class _ModelingJob extends ExperimentSetJob {
         this.__writeIntro(data, clustering, body, styles);
 
         if (clustering != null) {
-          OptionalElements.optionalSections(body, null,
-              new __ClusterIterator(clustering.getData().iterator(),
-                  logger));
+          Renderers.renderSections(body, null, new __ClusterIterator(
+              clustering.getData().iterator(), logger));
         } else {
-          OptionalElements.optionalSection(body, false, null,
+          Renderers.renderSection(body, false, null,
               new _ForExperimentSet(this, data, logger));
         }
       }
@@ -266,7 +265,7 @@ final class _ModelingJob extends ExperimentSetJob {
 
   /** an iterator for optional sections */
   private final class __ClusterIterator
-      extends BasicIterator<OptionalSection> {
+      extends BasicIterator<SectionRenderer> {
     /** the clustering */
     private final Iterator<? extends ICluster> m_clusters;
     /** the logger */
@@ -295,7 +294,7 @@ final class _ModelingJob extends ExperimentSetJob {
 
     /** {@inheritDoc} */
     @Override
-    public final OptionalSection next() {
+    public final SectionRenderer next() {
       return new _ForExperimentSet(_ModelingJob.this,
           this.m_clusters.next(), this.m_logger);
     }

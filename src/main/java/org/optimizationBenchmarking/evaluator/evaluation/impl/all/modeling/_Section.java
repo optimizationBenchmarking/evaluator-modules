@@ -9,8 +9,8 @@ import org.optimizationBenchmarking.evaluator.attributes.clusters.ICluster;
 import org.optimizationBenchmarking.evaluator.data.spec.IExperimentSet;
 import org.optimizationBenchmarking.evaluator.data.spec.IInstanceRuns;
 import org.optimizationBenchmarking.evaluator.evaluation.impl.all.modeling._Section._InnerContents;
-import org.optimizationBenchmarking.utils.document.impl.OptionalElements;
-import org.optimizationBenchmarking.utils.document.impl.OptionalSection;
+import org.optimizationBenchmarking.utils.document.impl.Renderers;
+import org.optimizationBenchmarking.utils.document.impl.SectionRenderer;
 import org.optimizationBenchmarking.utils.document.spec.ELabelType;
 import org.optimizationBenchmarking.utils.document.spec.EMathComparison;
 import org.optimizationBenchmarking.utils.document.spec.IComplexText;
@@ -28,7 +28,7 @@ import org.optimizationBenchmarking.utils.text.ETextCase;
 import org.optimizationBenchmarking.utils.text.numbers.InTextNumberAppender;
 
 /** the section class for printing contents */
-abstract class _Section extends OptionalSection
+abstract class _Section extends SectionRenderer
     implements Iterable<_InnerContents> {
   /** the data set */
   final IExperimentSet m_data;
@@ -77,9 +77,9 @@ abstract class _Section extends OptionalSection
 
   /** {@inheritDoc} */
   @Override
-  public void writeSectionBody(final boolean isNewSection,
+  protected void doRenderSectionBody(final boolean isNewSection,
       final ISectionBody body) {
-    OptionalElements.optionalSections(body, null, this);
+    Renderers.renderSections(body, null, this);
   }
 
   /**
@@ -331,7 +331,7 @@ abstract class _Section extends OptionalSection
   }
 
   /** the inner contents */
-  final class _InnerContents extends OptionalSection {
+  final class _InnerContents extends SectionRenderer {
     /** the selection */
     private final ISemanticComponent m_innerSelection;
     /** the results */
@@ -354,14 +354,14 @@ abstract class _Section extends OptionalSection
 
     /** {@inheritDoc} */
     @Override
-    public final void writeSectionTitle(final IComplexText title) {// empty
+    protected final void doRenderSectionTitle(final IComplexText title) {// empty
       _Section.this._writeSubSectionTitle(title, this.m_innerSelection,
           this.m_innerResults);
     }
 
     /** {@inheritDoc} */
     @Override
-    public final void writeSectionBody(final boolean isNewSection,
+    protected final void doRenderSectionBody(final boolean isNewSection,
         final ISectionBody body) {// empty
       _Section.this._writeSubSectionBody(isNewSection, body,
           this.m_innerSelection, this.m_innerResults);

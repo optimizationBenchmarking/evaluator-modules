@@ -113,7 +113,7 @@ final class _ForInstances extends _Section {
 
   /** {@inheritDoc} */
   @Override
-  public final void writeSectionTitle(final IComplexText title) {
+  protected final void doRenderSectionTitle(final IComplexText title) {
     title.append("Models Grouped by Benchmark Instance"); //$NON-NLS-1$
   }
 

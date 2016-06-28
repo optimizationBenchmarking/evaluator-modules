@@ -6,8 +6,8 @@ import org.optimizationBenchmarking.evaluator.attributes.PerInstanceRuns;
 import org.optimizationBenchmarking.evaluator.attributes.clusters.ICluster;
 import org.optimizationBenchmarking.evaluator.data.spec.IExperimentSet;
 import org.optimizationBenchmarking.utils.collections.iterators.BasicIterator;
-import org.optimizationBenchmarking.utils.document.impl.OptionalElements;
-import org.optimizationBenchmarking.utils.document.impl.OptionalSection;
+import org.optimizationBenchmarking.utils.document.impl.Renderers;
+import org.optimizationBenchmarking.utils.document.impl.SectionRenderer;
 import org.optimizationBenchmarking.utils.document.impl.SemanticComponentUtils;
 import org.optimizationBenchmarking.utils.document.spec.IComplexText;
 import org.optimizationBenchmarking.utils.document.spec.ISectionBody;
@@ -15,7 +15,7 @@ import org.optimizationBenchmarking.utils.ml.fitting.spec.IFittingResult;
 import org.optimizationBenchmarking.utils.text.ETextCase;
 
 /** the optional section per experiment set */
-final class _ForExperimentSet extends OptionalSection {
+final class _ForExperimentSet extends SectionRenderer {
 
   /** the owning job */
   final _ModelingJob m_job;
@@ -52,7 +52,7 @@ final class _ForExperimentSet extends OptionalSection {
 
   /** {@inheritDoc} */
   @Override
-  public final void writeSectionTitle(final IComplexText title) {
+  protected final void doRenderSectionTitle(final IComplexText title) {
     if (this.m_data instanceof ICluster) {
       title.append("Models for Cluster "); //$NON-NLS-1$
       ((ICluster) (this.m_data)).printShortName(title, ETextCase.IN_TITLE);
@@ -80,7 +80,7 @@ final class _ForExperimentSet extends OptionalSection {
 
   /** {@inheritDoc} */
   @Override
-  public void writeSectionBody(final boolean isNewSection,
+  protected final void doRenderSectionBody(final boolean isNewSection,
       final ISectionBody body) {
     if (!(isNewSection)) {
       body.append(' ');
@@ -89,14 +89,14 @@ final class _ForExperimentSet extends OptionalSection {
       this.__printClusterInfo(((ICluster) (this.m_data)), body);
     }
 
-    OptionalElements.optionalSections(body, null,
+    Renderers.renderSections(body, null,
         new __PartIterator(new PerInstanceRuns<>(this.m_data,
             this.m_job.m_attribute, this.m_logger)));
   }
 
   /** an iterator for optional sections */
   private final class __PartIterator
-      extends BasicIterator<OptionalSection> {
+      extends BasicIterator<SectionRenderer> {
 
     /** the results */
     private PerInstanceRuns<IFittingResult> m_results;
@@ -122,7 +122,7 @@ final class _ForExperimentSet extends OptionalSection {
 
     /** {@inheritDoc} */
     @Override
-    public final OptionalSection next() {
+    public final SectionRenderer next() {
       PerInstanceRuns<IFittingResult> results;
       switch (this.m_index++) {
         case 0: {
