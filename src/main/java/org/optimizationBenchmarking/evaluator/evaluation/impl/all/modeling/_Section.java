@@ -251,7 +251,7 @@ abstract class _Section extends SectionRenderer
     body.reference(ETextCase.IN_SENTENCE, ESequenceMode.AND, labels);
     body.append('.');
     for (final _InfoRecord record : records) {
-      record._table(body, this.m_job.m_dimY);
+      record._table(body, this.m_job.m_dimY, selection);
     }
   }
 

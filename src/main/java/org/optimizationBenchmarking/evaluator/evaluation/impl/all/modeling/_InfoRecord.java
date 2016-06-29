@@ -3,11 +3,14 @@ package org.optimizationBenchmarking.evaluator.evaluation.impl.all.modeling;
 import java.util.Arrays;
 
 import org.optimizationBenchmarking.evaluator.attributes.clusters.ICluster;
+import org.optimizationBenchmarking.evaluator.data.spec.IExperiment;
+import org.optimizationBenchmarking.evaluator.data.spec.IInstance;
 import org.optimizationBenchmarking.utils.document.spec.ETableCellDef;
 import org.optimizationBenchmarking.utils.document.spec.IComplexText;
 import org.optimizationBenchmarking.utils.document.spec.ILabel;
 import org.optimizationBenchmarking.utils.document.spec.IMath;
 import org.optimizationBenchmarking.utils.document.spec.ISectionBody;
+import org.optimizationBenchmarking.utils.document.spec.ISemanticComponent;
 import org.optimizationBenchmarking.utils.document.spec.ISemanticMathComponent;
 import org.optimizationBenchmarking.utils.document.spec.ITable;
 import org.optimizationBenchmarking.utils.document.spec.ITableRow;
@@ -70,9 +73,12 @@ final class _InfoRecord {
    *          the section body
    * @param y
    *          the semantic method component for the {@code y}-element
+   * @param selection
+   *          the selection component
    */
   final void _table(final ISectionBody body,
-      final ISemanticMathComponent y) {
+      final ISemanticMathComponent y, final ISemanticComponent selection) {
+    final long count;
     ETableCellDef[] defs;
     int columnIndex, rowIndex;
 
@@ -84,11 +90,16 @@ final class _InfoRecord {
         caption.append("Statistical information about the ");//$NON-NLS-1$
         InTextNumberAppender.INSTANCE.appendTo(this.m_information.length,
             ETextCase.IN_SENTENCE, caption);
-        caption.append(" parameters of each of the ");//$NON-NLS-1$
-        InTextNumberAppender.INSTANCE.appendTo(
-            this.m_information[0].getSampleSize(), ETextCase.IN_SENTENCE,
-            caption);
-        caption.append(" cases where model ");//$NON-NLS-1$
+        caption.append(" parameters ");//$NON-NLS-1$
+        count = this.m_information[0].getSampleSize();
+        if (count > 1L) {
+          caption.append("of each of the ");//$NON-NLS-1$
+          InTextNumberAppender.INSTANCE.appendTo(count,
+              ETextCase.IN_SENTENCE, caption);
+          caption.append(" cases where model ");//$NON-NLS-1$
+        } else {
+          caption.append("of the single case where model ");//$NON-NLS-1$
+        }
         this.m_model._renderStyled(caption);
         caption.append(" fit to describe how ");//$NON-NLS-1$
         y.printShortName(caption, ETextCase.IN_SENTENCE);
@@ -97,6 +108,18 @@ final class _InfoRecord {
         if (this.m_cluster != null) {
           caption.append(" in cluster ");//$NON-NLS-1$
           this.m_cluster.printShortName(caption, ETextCase.IN_SENTENCE);
+        }
+        if (selection != null) {
+          if (selection instanceof IInstance) {
+            caption.append(" on benchmark instance ");//$NON-NLS-1$
+          } else {
+            if (selection instanceof IExperiment) {
+              caption.append(" for algorithm setup ");//$NON-NLS-1$
+            } else {
+              caption.append(' ');
+            }
+          }
+          selection.printShortName(caption, ETextCase.IN_SENTENCE);
         }
         caption.append('.');
         caption.append(' ');
