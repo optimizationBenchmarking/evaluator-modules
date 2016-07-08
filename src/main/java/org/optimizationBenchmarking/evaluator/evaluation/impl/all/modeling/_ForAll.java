@@ -26,11 +26,13 @@ final class _ForAll extends _Section {
    *          the model info
    * @param job
    *          the owning modeling job
+   * @param pathComponent
+   *          the path component
    */
   _ForAll(final IExperimentSet data,
       final PerInstanceRuns<IFittingResult> results, final EModelInfo info,
-      final _ModelingJob job) {
-    super(data, results, info, job);
+      final _ModelingJob job, final String pathComponent) {
+    super(data, results, info, job, (pathComponent + "_all")); //$NON-NLS-1$
   }
 
   /** {@inheritDoc} */
@@ -89,6 +91,6 @@ final class _ForAll extends _Section {
   @Override
   public final Iterator<_InnerContents> iterator() {
     return new InstanceIterator<>(
-        new _InnerContents(null, this.m_results.getAll()));
+        new _InnerContents(_ForAll.this, null, this.m_results.getAll()));
   }
 }

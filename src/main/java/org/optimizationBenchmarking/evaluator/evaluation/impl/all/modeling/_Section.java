@@ -6,9 +6,10 @@ import java.util.Map.Entry;
 
 import org.optimizationBenchmarking.evaluator.attributes.PerInstanceRuns;
 import org.optimizationBenchmarking.evaluator.attributes.clusters.ICluster;
+import org.optimizationBenchmarking.evaluator.data.spec.IExperiment;
 import org.optimizationBenchmarking.evaluator.data.spec.IExperimentSet;
+import org.optimizationBenchmarking.evaluator.data.spec.IInstance;
 import org.optimizationBenchmarking.evaluator.data.spec.IInstanceRuns;
-import org.optimizationBenchmarking.evaluator.evaluation.impl.all.modeling._Section._InnerContents;
 import org.optimizationBenchmarking.utils.document.impl.Renderers;
 import org.optimizationBenchmarking.utils.document.impl.SectionRenderer;
 import org.optimizationBenchmarking.utils.document.spec.ELabelType;
@@ -38,6 +39,8 @@ abstract class _Section extends SectionRenderer
   final _ModelingJob m_job;
   /** the model info */
   final EModelInfo m_info;
+  /** the path component */
+  final String m_pathComponent;
 
   /**
    * create
@@ -50,10 +53,12 @@ abstract class _Section extends SectionRenderer
    *          the model info
    * @param job
    *          the owning modeling job
+   * @param pathComponent
+   *          the path component
    */
   _Section(final IExperimentSet data,
       final PerInstanceRuns<IFittingResult> results, final EModelInfo info,
-      final _ModelingJob job) {
+      final _ModelingJob job, final String pathComponent) {
     super();
     if (data == null) {
       throw new IllegalArgumentException("IExperimentSet cannot be null."); //$NON-NLS-1$
@@ -73,6 +78,7 @@ abstract class _Section extends SectionRenderer
     }
     this.m_info = info;
     this.m_job = job;
+    this.m_pathComponent = pathComponent;
   }
 
   /** {@inheritDoc} */
@@ -113,15 +119,61 @@ abstract class _Section extends SectionRenderer
   void _writeSubSectionBody(final boolean isNewSection,
       final ISectionBody body, final ISemanticComponent selection,
       final Entry<IInstanceRuns, IFittingResult>[] results) {
+    boolean has;
+
+    has = false;
     if (this.m_info.m_printStatistics) {
       this.__writeStatistics(body, selection, results);
-      if (this.m_info.m_printModels) {
-        body.append(' ');
-      }
+      has = true;
     }
+
+    if (this.m_info.m_plotModels) {
+      if (has) {
+        body.appendLineBreak();
+      }
+      has = true;
+      this.__writeFigures(body, selection, results);
+    }
+
     if (this.m_info.m_printModels) {
+      if (has) {
+        body.appendLineBreak();
+      }
+      has = true;
       this.__writeResults(body, selection, results);
     }
+  }
+
+  /**
+   * write the figures
+   *
+   * @param body
+   *          the section body
+   * @param selection
+   *          the selection, or {@code null} if nothing was selected
+   * @param results
+   *          the selected results
+   */
+  private final void __writeFigures(final ISectionBody body,
+      final ISemanticComponent selection,
+      final Entry<IInstanceRuns, IFittingResult>[] results) {
+    final ILabel figureLabel;
+
+    figureLabel = body.createLabel(ELabelType.FIGURE);
+    body.append("In ");//$NON-NLS-1$
+    body.reference(ETextCase.IN_SENTENCE, ESequenceMode.AND, figureLabel);
+    body.append(
+        " we plot the fitted models over the actual measured data. Each one of the "); //$NON-NLS-1$
+    this.m_job.m_thinLine.appendDescription(ETextCase.IN_SENTENCE, body,
+        false);
+    body.append(" stands for an independent run, while the colored "); //$NON-NLS-1$
+    this.m_job.m_normalLine.appendDescription(ETextCase.IN_SENTENCE, body,
+        false);
+    body.append(" represents the fitted model."); //$NON-NLS-1$
+
+    Renderers.renderFigures(
+        new _FigureSeriesRenderer(this, selection, results, figureLabel),
+        null, body);
   }
 
   /**
@@ -330,41 +382,111 @@ abstract class _Section extends SectionRenderer
     }
   }
 
-  /** the inner contents */
-  final class _InnerContents extends SectionRenderer {
-    /** the selection */
-    private final ISemanticComponent m_innerSelection;
-    /** the results */
-    private final Map.Entry<IInstanceRuns, IFittingResult>[] m_innerResults;
-
-    /**
-     * Write the contents section
-     *
-     * @param selection
-     *          the selection, or {@code null} if nothing was selected
-     * @param results
-     *          the selected results
-     */
-    _InnerContents(final ISemanticComponent selection,
-        final Map.Entry<IInstanceRuns, IFittingResult>[] results) {
-      super();
-      this.m_innerSelection = selection;
-      this.m_innerResults = results;
+  /**
+   * render a figure series caption
+   *
+   * @param selection
+   *          the selection
+   * @param results
+   *          the results
+   * @param caption
+   *          the caption text
+   */
+  void _renderFigureSeriesCaption(final ISemanticComponent selection,
+      final Entry<IInstanceRuns, IFittingResult>[] results,
+      final IComplexText caption) {
+    caption.append("All models ("); //$NON-NLS-1$
+    this.m_job.m_normalLine.appendDescription(ETextCase.IN_SENTENCE,
+        caption, false);
+    caption.append(" lines)");//$NON-NLS-1$
+    if (selection != null) {
+      caption.append(" for ");//$NON-NLS-1$
+      this._printSelectionFull(caption, selection, ETextCase.IN_SENTENCE);
     }
+    this.__printRestOfFigureDescription(caption);
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    protected final void doRenderSectionTitle(final IComplexText title) {// empty
-      _Section.this._writeSubSectionTitle(title, this.m_innerSelection,
-          this.m_innerResults);
+  /**
+   * print the rest of the figure description.
+   *
+   * @param caption
+   *          the caption
+   */
+  private final void __printRestOfFigureDescription(
+      final IComplexText caption) {
+    caption.append(" rendered on top of the actually measured runs ("); //$NON-NLS-1$
+    this.m_job.m_thinLine.appendDescription(ETextCase.IN_SENTENCE, caption,
+        false);
+    caption.append(" lines) in terms of "); //$NON-NLS-1$
+    this.m_job.m_transformationY.printDescription(caption,
+        ETextCase.IN_SENTENCE);
+    caption.append(" over ");//$NON-NLS-1$
+    this.m_job.m_transformationX.printDescription(caption,
+        ETextCase.IN_SENTENCE);
+    if (this.m_data instanceof ICluster) {
+      caption.append(" for group ");//$NON-NLS-1$
+      ((ICluster) (this.m_data)).printShortName(caption,
+          ETextCase.IN_SENTENCE);
     }
+    caption.append('.');
+  }
 
-    /** {@inheritDoc} */
-    @Override
-    protected final void doRenderSectionBody(final boolean isNewSection,
-        final ISectionBody body) {// empty
-      _Section.this._writeSubSectionBody(isNewSection, body,
-          this.m_innerSelection, this.m_innerResults);
+  /**
+   * render a figure series caption
+   *
+   * @param isPartOfSeries
+   *          is this an element of a series or not?
+   * @param selection
+   *          the selection
+   * @param runs
+   *          the runs
+   * @param result
+   *          the fitting result
+   * @param model
+   *          the model
+   * @param caption
+   *          the caption text
+   */
+  void _renderFigureCaption(final boolean isPartOfSeries,
+      final ISemanticComponent selection, final IInstanceRuns runs,
+      final IFittingResult result, final _Model model,
+      final IComplexText caption) {
+    IExperiment experiment;
+    IInstance instance;
+    boolean has;
+
+    if (!isPartOfSeries) {
+      caption.append("Fitted model for "); //$NON-NLS-1$
+    }
+    experiment = runs.getOwner();
+    if (experiment == selection) {
+      has = false;
+    } else {
+      caption.append("setup ");//$NON-NLS-1$
+      experiment.printShortName(caption, ETextCase.IN_SENTENCE);
+      has = true;
+    }
+    instance = runs.getInstance();
+    if (instance != selection) {
+      if (has) {
+        caption.append(" on ");//$NON-NLS-1$
+      }
+      caption.append("instance "); //$NON-NLS-1$
+      instance.printShortName(caption, ETextCase.IN_SENTENCE);
+    }
+    caption.append(' ');
+    caption.append(':');
+    model._renderWithParametersStyles(caption,
+        result.getFittedParametersRef());
+
+    if (!isPartOfSeries) {
+      caption.append(' ');
+      caption.append('(');
+      this.m_job.m_normalLine.appendDescription(ETextCase.IN_SENTENCE,
+          caption, false);
+      caption.append(" line)"); //$NON-NLS-1$
+      this.__printRestOfFigureDescription(caption);
     }
   }
+
 }

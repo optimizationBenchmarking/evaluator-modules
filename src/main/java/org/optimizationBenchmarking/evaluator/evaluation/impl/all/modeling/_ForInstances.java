@@ -30,11 +30,13 @@ final class _ForInstances extends _Section {
    *          the model info
    * @param job
    *          the owning modeling job
+   * @param pathComponent
+   *          the path component
    */
   _ForInstances(final IExperimentSet data,
       final PerInstanceRuns<IFittingResult> results, final EModelInfo info,
-      final _ModelingJob job) {
-    super(data, results, info, job);
+      final _ModelingJob job, final String pathComponent) {
+    super(data, results, info, job, (pathComponent + "_instance"));//$NON-NLS-1$
   }
 
   /** {@inheritDoc} */
@@ -144,7 +146,7 @@ final class _ForInstances extends _Section {
 
       list = _ForInstances.this.m_results.getAllForInstance(element);
       if ((list != null) && (list.length > 0)) {
-        return new _InnerContents(element, list);
+        return new _InnerContents(_ForInstances.this, element, list);
       }
       return null;
     }

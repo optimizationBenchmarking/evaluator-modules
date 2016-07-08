@@ -21,6 +21,16 @@ public final class ModelInfoParser extends InstanceParser<EModelInfo> {
    */
   private static final String STATISTICS_ONLY = "statistics only"; //$NON-NLS-1$
 
+  /**
+   * plots only charts: {@link EModelInfo#CHARTS_ONLY}
+   */
+  private static final String CHARTS_ONLY = "charts only"; //$NON-NLS-1$
+  /**
+   * print statistics information and plot charts:
+   * {@link EModelInfo#STATISTICS_AND_CHARTS}
+   */
+  private static final String STATISTICS_AND_CHARTS = "statistics and charts"; //$NON-NLS-1$
+
   /** the parser constant */
   public static final ModelInfoParser INSTANCE = new ModelInfoParser();
 
@@ -42,11 +52,17 @@ public final class ModelInfoParser extends InstanceParser<EModelInfo> {
         case ALL: {
           return EModelInfo.ALL;
         }
+        case CHARTS_ONLY: {
+          return EModelInfo.CHARTS_ONLY;
+        }
         case MODELS_ONLY: {
           return EModelInfo.MODELS_ONLY;
         }
         case NONE: {
           return EModelInfo.NONE;
+        }
+        case STATISTICS_AND_CHARTS: {
+          return EModelInfo.STATISTICS_AND_CHARTS;
         }
         case STATISTICS_ONLY: {
           return EModelInfo.STATISTICS_ONLY;

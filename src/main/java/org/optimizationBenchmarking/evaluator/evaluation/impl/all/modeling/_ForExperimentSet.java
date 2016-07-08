@@ -26,6 +26,9 @@ final class _ForExperimentSet extends SectionRenderer {
   /** the logger */
   final Logger m_logger;
 
+  /** the basic path component */
+  final String m_basePathComponent;
+
   /**
    * create the experiment set job
    *
@@ -35,9 +38,11 @@ final class _ForExperimentSet extends SectionRenderer {
    *          the data
    * @param logger
    *          the logger
+   * @param basePathComponent
+   *          the basic path component
    */
   _ForExperimentSet(final _ModelingJob job, final IExperimentSet data,
-      final Logger logger) {
+      final Logger logger, final String basePathComponent) {
     super();
     if (job == null) {
       throw new IllegalArgumentException("_ModelingJob cannot be null."); //$NON-NLS-1$
@@ -45,9 +50,14 @@ final class _ForExperimentSet extends SectionRenderer {
     if (data == null) {
       throw new IllegalArgumentException("IExperimentSet cannot be null."); //$NON-NLS-1$
     }
+    if (basePathComponent == null) {
+      throw new IllegalArgumentException(
+          "Basic path component cannot be null."); //$NON-NLS-1$
+    }
     this.m_job = job;
     this.m_data = data;
     this.m_logger = logger;
+    this.m_basePathComponent = basePathComponent;
   }
 
   /** {@inheritDoc} */
@@ -131,7 +141,8 @@ final class _ForExperimentSet extends SectionRenderer {
           }
           return new _ForAll(_ForExperimentSet.this.m_data, this.m_results,
               _ForExperimentSet.this.m_job.m_overall,
-              _ForExperimentSet.this.m_job);
+              _ForExperimentSet.this.m_job,
+              _ForExperimentSet.this.m_basePathComponent);
         }
         case 1: {
           if (_ForExperimentSet.this.m_job.m_perAlgorithm == EModelInfo.NONE) {
@@ -139,7 +150,8 @@ final class _ForExperimentSet extends SectionRenderer {
           }
           return new _ForExperiments(_ForExperimentSet.this.m_data,
               this.m_results, _ForExperimentSet.this.m_job.m_perAlgorithm,
-              _ForExperimentSet.this.m_job);
+              _ForExperimentSet.this.m_job,
+              _ForExperimentSet.this.m_basePathComponent);
         }
         case 2: {
           results = this.m_results;
@@ -149,7 +161,8 @@ final class _ForExperimentSet extends SectionRenderer {
           }
           return new _ForInstances(_ForExperimentSet.this.m_data, results,
               _ForExperimentSet.this.m_job.m_perInstance,
-              _ForExperimentSet.this.m_job);
+              _ForExperimentSet.this.m_job,
+              _ForExperimentSet.this.m_basePathComponent);
         }
         default: {
           return super.next();

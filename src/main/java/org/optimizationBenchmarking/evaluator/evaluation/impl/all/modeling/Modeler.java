@@ -6,6 +6,7 @@ import org.optimizationBenchmarking.evaluator.data.spec.IExperimentSet;
 import org.optimizationBenchmarking.evaluator.evaluation.impl.abstr.ExperimentSetModule;
 import org.optimizationBenchmarking.evaluator.evaluation.spec.EModuleType;
 import org.optimizationBenchmarking.utils.config.Configuration;
+import org.optimizationBenchmarking.utils.document.impl.FigureSizeParser;
 
 /**
  * This module creates models of the relationship between two dimensions
@@ -23,6 +24,8 @@ public final class Modeler extends ExperimentSetModule {
   public static final String PARAM_PER_INSTANCE = "perInstance"; //$NON-NLS-1$
   /** should we list the models for each algorithm? */
   public static final String PARAM_PER_ALGORITHM = "perAlgorithm"; //$NON-NLS-1$
+  /** the size of the figures, if any */
+  public static final String PARAM_FIGURE_SIZE = FigureSizeParser.PARAM_FIGURE_SIZE;
 
   /** create the instance information tool */
   Modeler() {

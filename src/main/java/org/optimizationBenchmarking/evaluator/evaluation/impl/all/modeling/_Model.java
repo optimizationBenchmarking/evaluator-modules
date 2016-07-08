@@ -3,7 +3,7 @@ package org.optimizationBenchmarking.evaluator.evaluation.impl.all.modeling;
 import org.optimizationBenchmarking.utils.document.spec.IComplexText;
 import org.optimizationBenchmarking.utils.document.spec.IMath;
 import org.optimizationBenchmarking.utils.document.spec.ISemanticMathComponent;
-import org.optimizationBenchmarking.utils.graphics.style.spec.IStyle;
+import org.optimizationBenchmarking.utils.graphics.style.spec.IColorStyle;
 import org.optimizationBenchmarking.utils.math.text.DoubleConstantParameters;
 import org.optimizationBenchmarking.utils.ml.fitting.spec.ParametricUnaryFunction;
 import org.optimizationBenchmarking.utils.text.ETextCase;
@@ -17,7 +17,7 @@ final class _Model implements ISequenceable {
   final ParametricUnaryFunction m_function;
 
   /** the style */
-  private final IStyle m_style;
+  final IColorStyle m_style;
 
   /** the math renderable */
   final ISemanticMathComponent m_x;
@@ -32,7 +32,7 @@ final class _Model implements ISequenceable {
    * @param x
    *          the math renderable for {@code x}-coordinates
    */
-  _Model(final ParametricUnaryFunction function, final IStyle style,
+  _Model(final ParametricUnaryFunction function, final IColorStyle style,
       final ISemanticMathComponent x) {
     super();
     if (function == null) {

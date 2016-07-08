@@ -17,6 +17,10 @@
 		<cd:choice name="none" description="Don't print the overall model information." />
 		<cd:choice name="statistics only"
 			description="Print aggregate statistics computed from the discovered models." />
+		<cd:choice name="charts only"
+			description="Plot diagrams containing the fitted model over the actually measured runs." />
+		<cd:choice name="statistics and charts"
+			description="Print statistics and plot diagrams containing the fitted model over the actually measured runs." />
 		<cd:choice name="models only"
 			description="For each algorithm/benchmark instance, print the fitted model." />
 		<cd:choice name="all"
@@ -31,6 +35,10 @@
 		<cd:choice name="none" description="Don't print the overall model information." />
 		<cd:choice name="statistics only"
 			description="Print aggregate statistics computed from the discovered models." />
+		<cd:choice name="charts only"
+			description="Plot diagrams containing the fitted model over the actually measured runs." />
+		<cd:choice name="statistics and charts"
+			description="Print statistics and plot diagrams containing the fitted model over the actually measured runs." />
 		<cd:choice name="models only"
 			description="For each algorithm/benchmark instance, print the fitted model." />
 		<cd:choice name="all"
@@ -45,6 +53,10 @@
 		<cd:choice name="none" description="Don't print the overall model information." />
 		<cd:choice name="statistics only"
 			description="Print aggregate statistics computed from the discovered models." />
+		<cd:choice name="charts only"
+			description="Plot diagrams containing the fitted model over the actually measured runs." />
+		<cd:choice name="statistics and charts"
+			description="Print statistics and plot diagrams containing the fitted model over the actually measured runs." />
 		<cd:choice name="models only"
 			description="For each algorithm/benchmark instance, print the fitted model." />
 		<cd:choice name="all"
@@ -53,5 +65,8 @@
 
 	<cd:inherit
 		class="org.optimizationBenchmarking.evaluator.attributes.clusters.ClustererLoader" />
+
+  <cd:inherit
+    class="org.optimizationBenchmarking.utils.document.impl.FigureSizeParser" />
 
 </cd:configurationDefinition>

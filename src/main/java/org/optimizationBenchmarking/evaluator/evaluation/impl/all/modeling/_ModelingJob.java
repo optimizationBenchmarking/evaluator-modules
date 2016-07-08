@@ -1,12 +1,12 @@
 package org.optimizationBenchmarking.evaluator.evaluation.impl.all.modeling;
 
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.logging.Logger;
 
 import org.optimizationBenchmarking.evaluator.attributes.clusters.ClustererLoader;
-import org.optimizationBenchmarking.evaluator.attributes.clusters.ICluster;
 import org.optimizationBenchmarking.evaluator.attributes.clusters.IClustering;
+import org.optimizationBenchmarking.evaluator.attributes.functions.DimensionTransformation;
+import org.optimizationBenchmarking.evaluator.attributes.functions.DimensionTransformationParser;
 import org.optimizationBenchmarking.evaluator.attributes.modeling.DimensionRelationship;
 import org.optimizationBenchmarking.evaluator.attributes.modeling.DimensionRelationshipModels;
 import org.optimizationBenchmarking.evaluator.data.spec.Attribute;
@@ -14,12 +14,12 @@ import org.optimizationBenchmarking.evaluator.data.spec.IDimension;
 import org.optimizationBenchmarking.evaluator.data.spec.IDimensionSet;
 import org.optimizationBenchmarking.evaluator.data.spec.IExperimentSet;
 import org.optimizationBenchmarking.evaluator.evaluation.impl.abstr.ExperimentSetJob;
-import org.optimizationBenchmarking.utils.collections.iterators.BasicIterator;
 import org.optimizationBenchmarking.utils.comparison.Compare;
 import org.optimizationBenchmarking.utils.config.Configuration;
+import org.optimizationBenchmarking.utils.document.impl.FigureSizeParser;
 import org.optimizationBenchmarking.utils.document.impl.Renderers;
-import org.optimizationBenchmarking.utils.document.impl.SectionRenderer;
 import org.optimizationBenchmarking.utils.document.impl.SemanticComponentUtils;
+import org.optimizationBenchmarking.utils.document.spec.EFigureSize;
 import org.optimizationBenchmarking.utils.document.spec.EMathComparison;
 import org.optimizationBenchmarking.utils.document.spec.IComplexText;
 import org.optimizationBenchmarking.utils.document.spec.IDocument;
@@ -29,6 +29,7 @@ import org.optimizationBenchmarking.utils.document.spec.IPlainText;
 import org.optimizationBenchmarking.utils.document.spec.ISection;
 import org.optimizationBenchmarking.utils.document.spec.ISectionBody;
 import org.optimizationBenchmarking.utils.document.spec.ISectionContainer;
+import org.optimizationBenchmarking.utils.graphics.style.spec.IStrokeStyle;
 import org.optimizationBenchmarking.utils.graphics.style.spec.IStyles;
 import org.optimizationBenchmarking.utils.math.text.ABCParameterRenderer;
 import org.optimizationBenchmarking.utils.ml.fitting.spec.ParametricUnaryFunction;
@@ -46,6 +47,14 @@ final class _ModelingJob extends ExperimentSetJob {
 
   /** the number appender to use */
   static final NumberAppender APPENDER = TruncatedNumberAppender.INSTANCE;
+
+  /** the basic path component */
+  private static final String BASE_PATH_COMPONENT = "model"; //$NON-NLS-1$
+
+  /** the transformation of the {@code x} dimension */
+  final DimensionTransformation m_transformationX;
+  /** the transformation of the {@code y} dimension */
+  final DimensionTransformation m_transformationY;
 
   /** the {@code x}-axis dimension */
   final IDimension m_dimX;
@@ -67,6 +76,14 @@ final class _ModelingJob extends ExperimentSetJob {
   /** the clusterer, or {@code null} if none was requested */
   private final Attribute<? super IExperimentSet, ? extends IClustering> m_clusterer;
 
+  /** the figure size */
+  final EFigureSize m_figureSize;
+
+  /** the thin line */
+  IStrokeStyle m_thinLine;
+  /** the normal line */
+  IStrokeStyle m_normalLine;
+
   /**
    * Create the modeling job
    *
@@ -82,15 +99,43 @@ final class _ModelingJob extends ExperimentSetJob {
     super(data, logger);
 
     final IDimensionSet dimensions;
+    final DimensionTransformationParser parser;
 
-    dimensions = data.getDimensions();
-    this.m_dimX = dimensions.find(config.getString(Modeler.PARAM_X, null));
+    this.m_perAlgorithm = config.get(Modeler.PARAM_PER_ALGORITHM,
+        ModelInfoParser.INSTANCE, EModelInfo.NONE);
+    this.m_perInstance = config.get(Modeler.PARAM_PER_INSTANCE,
+        ModelInfoParser.INSTANCE, EModelInfo.NONE);
+    this.m_overall = config.get(Modeler.PARAM_OVERALL,
+        ModelInfoParser.INSTANCE, //
+        ((this.m_perAlgorithm == EModelInfo.NONE)
+            && (this.m_perInstance == EModelInfo.NONE))//
+                ? EModelInfo.STATISTICS_ONLY : EModelInfo.NONE);
+
+    if (this.m_perAlgorithm.m_plotModels || //
+        this.m_perInstance.m_plotModels || //
+        this.m_overall.m_plotModels) {
+      parser = new DimensionTransformationParser(data);
+      this.m_transformationX = config.get(Modeler.PARAM_X, parser, null);
+      this.m_dimX = ((this.m_transformationX != null)
+          ? this.m_transformationX.getDimension() : null);
+      this.m_transformationY = config.get(Modeler.PARAM_Y, parser, null);
+      this.m_dimY = ((this.m_transformationY != null)
+          ? this.m_transformationY.getDimension() : null);
+    } else {
+      dimensions = data.getDimensions();
+      this.m_dimX = dimensions
+          .find(config.getString(Modeler.PARAM_X, null));
+      this.m_dimY = dimensions
+          .find(config.getString(Modeler.PARAM_Y, null));
+      this.m_transformationX = null;
+      this.m_transformationY = null;
+    }
+
     if (this.m_dimX == null) {
       throw new IllegalArgumentException(((//
       "Must provide a source/x dimension via parameter '" //$NON-NLS-1$
           + Modeler.PARAM_X) + '\'') + '.');
     }
-    this.m_dimY = dimensions.find(config.getString(Modeler.PARAM_Y, null));
     if (this.m_dimY == null) {
       throw new IllegalArgumentException(((//
       "Must provide a target/y dimension via parameter '" //$NON-NLS-1$
@@ -105,19 +150,24 @@ final class _ModelingJob extends ExperimentSetJob {
 
     this.m_attribute = new DimensionRelationship(this.m_dimX, this.m_dimY);
 
+    this.m_clusterer = ClustererLoader.configureClustering(data, config);
+
+    this.m_figureSize = config.get(Modeler.PARAM_FIGURE_SIZE,
+        FigureSizeParser.INSTANCE, EFigureSize.PAGE_3_PER_ROW);
+
     this.m_models = new LinkedHashMap<>();
 
-    this.m_perAlgorithm = config.get(Modeler.PARAM_PER_ALGORITHM,
-        ModelInfoParser.INSTANCE, EModelInfo.NONE);
-    this.m_perInstance = config.get(Modeler.PARAM_PER_INSTANCE,
-        ModelInfoParser.INSTANCE, EModelInfo.NONE);
-    this.m_overall = config.get(Modeler.PARAM_OVERALL,
-        ModelInfoParser.INSTANCE, //
-        ((this.m_perAlgorithm == EModelInfo.NONE)
-            && (this.m_perInstance == EModelInfo.NONE))//
-                ? EModelInfo.STATISTICS_ONLY : EModelInfo.NONE);
+  }
 
-    this.m_clusterer = ClustererLoader.configureClustering(data, config);
+  /**
+   * get the path component suggestion
+   *
+   * @return the path component suggestion
+   */
+  final String _getPathComponentSuggestion() {
+    return _ModelingJob.BASE_PATH_COMPONENT + '_'
+        + this.m_transformationX.getPathComponentSuggestion() + '_'
+        + this.m_transformationY.getPathComponentSuggestion();
   }
 
   /** {@inheritDoc} */
@@ -135,6 +185,9 @@ final class _ModelingJob extends ExperimentSetJob {
                   .getColor(function.getClass().getCanonicalName(), true),
               this.m_dimX));
     }
+
+    this.m_thinLine = styles.getThinStroke();
+    this.m_normalLine = styles.getThickStroke();
   }
 
   /** {@inheritDoc} */
@@ -166,11 +219,11 @@ final class _ModelingJob extends ExperimentSetJob {
         this.__writeIntro(data, clustering, body, styles);
 
         if (clustering != null) {
-          Renderers.renderSections(body, null, new __ClusterIterator(
+          Renderers.renderSections(body, null, new _ClusterIterator(this,
               clustering.getData().iterator(), logger));
         } else {
-          Renderers.renderSection(body, false, null,
-              new _ForExperimentSet(this, data, logger));
+          Renderers.renderSection(body, false, null, new _ForExperimentSet(
+              this, data, logger, this._getPathComponentSuggestion()));
         }
       }
     }
@@ -261,42 +314,5 @@ final class _ModelingJob extends ExperimentSetJob {
         "Since all models are fitted on measured data, there are two sources of errors that may bias the results: First, the measurements may be imprecise. Second, we cannot guarantee that the fitting algorithms will find the globally best fit for a model or even the best model. Thus, all ");//$NON-NLS-1$
     _ModelingJob.APPENDER.printDescription(body, ETextCase.IN_SENTENCE);
     body.append('.');
-  }
-
-  /** an iterator for optional sections */
-  private final class __ClusterIterator
-      extends BasicIterator<SectionRenderer> {
-    /** the clustering */
-    private final Iterator<? extends ICluster> m_clusters;
-    /** the logger */
-    private final Logger m_logger;
-
-    /**
-     * create the iterator
-     *
-     * @param clusters
-     *          the clusters
-     * @param logger
-     *          the logger
-     */
-    __ClusterIterator(final Iterator<? extends ICluster> clusters,
-        final Logger logger) {
-      super();
-      this.m_clusters = clusters;
-      this.m_logger = logger;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public final boolean hasNext() {
-      return this.m_clusters.hasNext();
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public final SectionRenderer next() {
-      return new _ForExperimentSet(_ModelingJob.this,
-          this.m_clusters.next(), this.m_logger);
-    }
   }
 }
