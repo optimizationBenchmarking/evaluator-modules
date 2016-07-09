@@ -22,7 +22,6 @@ import org.optimizationBenchmarking.utils.chart.spec.IAxis;
 import org.optimizationBenchmarking.utils.chart.spec.ILine2D;
 import org.optimizationBenchmarking.utils.chart.spec.ILineChart2D;
 import org.optimizationBenchmarking.utils.collections.lists.ArrayListView;
-import org.optimizationBenchmarking.utils.collections.visitors.IVisitor;
 import org.optimizationBenchmarking.utils.config.Configuration;
 import org.optimizationBenchmarking.utils.document.impl.FigureSizeParser;
 import org.optimizationBenchmarking.utils.document.spec.EFigureSize;
@@ -39,13 +38,11 @@ import org.optimizationBenchmarking.utils.graphics.style.spec.IColorStyle;
 import org.optimizationBenchmarking.utils.graphics.style.spec.IFontStyle;
 import org.optimizationBenchmarking.utils.graphics.style.spec.IStrokeStyle;
 import org.optimizationBenchmarking.utils.graphics.style.spec.IStyles;
-import org.optimizationBenchmarking.utils.math.BasicNumber;
 import org.optimizationBenchmarking.utils.math.matrix.IMatrix;
 import org.optimizationBenchmarking.utils.math.matrix.impl.MatrixFunctionBuilder;
 import org.optimizationBenchmarking.utils.math.matrix.processing.iterator2D.EIterationMode;
 import org.optimizationBenchmarking.utils.math.matrix.processing.iterator2D.EMissingValueMode;
 import org.optimizationBenchmarking.utils.math.matrix.processing.iterator2D.MatrixIteration2DBuilder;
-import org.optimizationBenchmarking.utils.math.matrix.processing.iterator2D.MatrixIteration2DState;
 import org.optimizationBenchmarking.utils.math.statistics.aggregate.CompoundAggregate;
 import org.optimizationBenchmarking.utils.math.statistics.aggregate.FiniteMaximumAggregate;
 import org.optimizationBenchmarking.utils.math.statistics.aggregate.FiniteMinimumAggregate;
@@ -1046,7 +1043,7 @@ public abstract class FunctionJob extends ExperimentSetJob {
     ICluster cluster;
     IFigure curFigure;
     ILineChart2D curChart;
-    String path;
+    String path, functionName;
     int size, index;
 
     if (data == null) {
@@ -1055,10 +1052,6 @@ public abstract class FunctionJob extends ExperimentSetJob {
     }
 
     path = this.getFunctionPathComponentSuggestion();
-    clustering = data.getClustering();
-    if (clustering != null) {
-      path = (path + '_' + clustering.getPathComponentSuggestion());
-    }
     if (this.m_minX != null) {
       path += ("_x1=" + this.m_minX); //$NON-NLS-1$
     }
@@ -1070,6 +1063,11 @@ public abstract class FunctionJob extends ExperimentSetJob {
     }
     if (this.m_maxY != null) {
       path += ("_y2=" + this.m_maxY); //$NON-NLS-1$
+    }
+    functionName = path;
+    clustering = data.getClustering();
+    if (clustering != null) {
+      path = (path + '/' + clustering.getPathComponentSuggestion());
     }
     mainPath = path;
 
@@ -1089,7 +1087,7 @@ public abstract class FunctionJob extends ExperimentSetJob {
       experimentSetFunctions = allFunctions.get(0);
       cluster = experimentSetFunctions.getCluster();
       if (cluster != null) {
-        path = (path + '_' + cluster.getPathComponentSuggestion());
+        path = (path + '/' + cluster.getPathComponentSuggestion());
       }
 
       try (final IFigure figure = body.figure(data.getLabel(),
@@ -1120,7 +1118,7 @@ public abstract class FunctionJob extends ExperimentSetJob {
         index = 0;
 
         if (this.m_makeLegendFigure) {
-          path = (mainPath + "_legend"); //$NON-NLS-1$
+          path = (mainPath + '/' + functionName + "_legend"); //$NON-NLS-1$
 
           this.__logFigure(logger, (++index), size);
 
@@ -1131,8 +1129,9 @@ public abstract class FunctionJob extends ExperimentSetJob {
           }
           curChart = curFigure.lineChart2D();
           curChart.setLegendMode(ELegendMode.CHART_IS_LEGEND);
-          tasks[index - 1] = Execute.parallel(new __DrawChart(curFigure,
-              curChart, allFunctions.get(0), true, true, styles));
+          tasks[index - 1] = Execute
+              .parallel(new _DrawChart(this, curFigure, curChart,
+                  allFunctions.get(0), true, true, styles));
         }
 
         for (final ExperimentSetFunctions experimentSetFunctions2 : data
@@ -1141,7 +1140,8 @@ public abstract class FunctionJob extends ExperimentSetJob {
           path = mainPath;
           cluster = experimentSetFunctions2.getCluster();
           if (cluster != null) {
-            path = (path + '_' + cluster.getPathComponentSuggestion());
+            path = (path + '/' + functionName + '_'
+                + cluster.getPathComponentSuggestion());
           }
 
           this.__logFigure(logger, (++index), size);
@@ -1157,7 +1157,7 @@ public abstract class FunctionJob extends ExperimentSetJob {
               ? ELegendMode.HIDE_COMPLETE_LEGEND//
               : ELegendMode.SHOW_COMPLETE_LEGEND);
           tasks[index - 1] = Execute
-              .parallel(new __DrawChart(curFigure, curChart,
+              .parallel(new _DrawChart(this, curFigure, curChart,
                   experimentSetFunctions2, (!(this.m_makeLegendFigure)),
                   (!(this.m_makeLegendFigure)), styles));
         }
@@ -1452,7 +1452,7 @@ public abstract class FunctionJob extends ExperimentSetJob {
     new MatrixIteration2DBuilder().setXDimension(0)//
         .setYDimension(1)//
         .setMatrices(source)//
-        .setVisitor(new __RankingTransformer(builders))//
+        .setVisitor(new _RankingTransformer(this, builders))//
         .setStartMode(EMissingValueMode.SKIP)//
         .setEndMode(
             this.m_rankingContinue ? EMissingValueMode.USE_ITERATION_MODE
@@ -1577,107 +1577,6 @@ public abstract class FunctionJob extends ExperimentSetJob {
     public final ExperimentSetFunctions call() {
       return FunctionJob.this._makeFunctions(this.m_data, this.m_data,
           this.m_logger);
-    }
-  }
-
-  /** draw a chart */
-  private final class __DrawChart implements Runnable {
-
-    /** the figure */
-    private final IFigure m_figure;
-    /** the chart */
-    private final ILineChart2D m_chart;
-    /** the data */
-    private final ExperimentSetFunctions m_data;
-    /** the line titles */
-    private final boolean m_showLineTitles;
-    /** the axis */
-    private final boolean m_showAxisTitles_;
-    /** the styles */
-    private final IStyles m_styles;
-
-    /**
-     * draw the line chart
-     *
-     * @param figure
-     *          the figure
-     * @param chart
-     *          the chart
-     * @param data
-     *          the data to paint
-     * @param showAxisTitles
-     *          should we show the axis titles?
-     * @param showLineTitles
-     *          should line titles be shown?
-     * @param styles
-     *          the style set
-     */
-    __DrawChart(final IFigure figure, final ILineChart2D chart,
-        final ExperimentSetFunctions data, final boolean showLineTitles,
-        final boolean showAxisTitles, final IStyles styles) {
-      super();
-      this.m_figure = figure;
-      this.m_chart = chart;
-      this.m_data = data;
-      this.m_showLineTitles = showLineTitles;
-      this.m_showAxisTitles_ = showAxisTitles;
-      this.m_styles = styles;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public final void run() {
-      try (final IFigure figure = this.m_figure) {
-        try (final ILineChart2D chart = this.m_chart) {
-          FunctionJob.this._drawChart(chart, this.m_data,
-              this.m_showLineTitles, this.m_showAxisTitles_,
-              this.m_styles);
-        }
-      }
-    }
-  }
-
-  /** the ranking transformer */
-  private final class __RankingTransformer
-      implements IVisitor<MatrixIteration2DState> {
-
-    /** the builders */
-    private final MatrixFunctionBuilder[] m_builders;
-    /** the ranks */
-    private final double[] m_ranks;
-
-    /**
-     * create
-     *
-     * @param builders
-     *          the builders
-     */
-    __RankingTransformer(final MatrixFunctionBuilder[] builders) {
-      super();
-
-      this.m_builders = builders;
-      this.m_ranks = new double[builders.length];
-    }
-
-    @Override
-    public boolean visit(final MatrixIteration2DState object) {
-      int index;
-      MatrixFunctionBuilder builder;
-      BasicNumber x;
-
-      FunctionJob.this.m_ranking.rankRow(object.getY(), 0, this.m_ranks);
-      x = object.getX();
-
-      for (index = object.getSourceMatrixCount(); (--index) >= 0;) {
-        builder = this.m_builders[object.getSourceMatrixIndex(index)];
-        if (x.isInteger()) {
-          builder.addPoint(x.longValue(), this.m_ranks[index]);
-        } else {
-          builder.addPoint(x.doubleValue(), this.m_ranks[index]);
-        }
-      }
-
-      return true;
     }
   }
 }

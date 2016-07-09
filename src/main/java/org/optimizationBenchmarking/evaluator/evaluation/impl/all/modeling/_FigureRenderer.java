@@ -108,7 +108,8 @@ final class _FigureRenderer extends FigureRenderer {
     }
 
     return ((_FigureSeriesRenderer._basePathComponentSelection(
-        this.m_owner.m_pathComponent, this.m_selection) + '_') + local);
+        this.m_owner.m_pathComponent, this.m_selection,
+        this.m_owner.m_data) + '/') + local);
   }
 
   /** {@inheritDoc} */
@@ -209,7 +210,7 @@ final class _FigureRenderer extends FigureRenderer {
       try (final ILine2D line = chart.line()) {
         line.setType(ELineType.SMOOTH);
         line.setColor(model.m_style.getColor());
-        line.setStroke(this.m_owner.m_job.m_thinLine.getStroke());
+        line.setStroke(this.m_owner.m_job.m_normalLine.getStroke());
         line.setData(modelLinesGetter.get());
         modelLinesGetter = null;
       }

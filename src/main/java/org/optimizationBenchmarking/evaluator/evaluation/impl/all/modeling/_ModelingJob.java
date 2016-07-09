@@ -165,7 +165,7 @@ final class _ModelingJob extends ExperimentSetJob {
    * @return the path component suggestion
    */
   final String _getPathComponentSuggestion() {
-    return _ModelingJob.BASE_PATH_COMPONENT + '_'
+    return _ModelingJob.BASE_PATH_COMPONENT + '/'
         + this.m_transformationX.getPathComponentSuggestion() + '_'
         + this.m_transformationY.getPathComponentSuggestion();
   }
