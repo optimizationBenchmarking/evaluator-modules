@@ -108,8 +108,7 @@ final class _FigureRenderer extends FigureRenderer {
     }
 
     return ((_FigureSeriesRenderer._basePathComponentSelection(
-        this.m_owner.m_pathComponent, this.m_selection,
-        this.m_owner.m_data) + '/') + local);
+        this.m_owner.m_pathComponent, this.m_selection) + '/') + local);
   }
 
   /** {@inheritDoc} */

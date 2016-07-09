@@ -2,8 +2,6 @@ package org.optimizationBenchmarking.evaluator.evaluation.impl.all.modeling;
 
 import java.util.Map.Entry;
 
-import org.optimizationBenchmarking.evaluator.attributes.clusters.ICluster;
-import org.optimizationBenchmarking.evaluator.data.spec.IExperimentSet;
 import org.optimizationBenchmarking.evaluator.data.spec.IInstanceRuns;
 import org.optimizationBenchmarking.utils.collections.iterators.ArrayIterator;
 import org.optimizationBenchmarking.utils.document.impl.FigureSeriesRenderer;
@@ -60,27 +58,14 @@ final class _FigureSeriesRenderer extends FigureSeriesRenderer {
    *          the base
    * @param selection
    *          the selection
-   * @param data
-   *          the data
    * @return the component
    */
   static final String _basePathComponentSelection(final String base,
-      final ISemanticComponent selection, final IExperimentSet data) {
-    ICluster cluster;
-    String baseStr;
-
-    baseStr = base;
-    if (data instanceof ICluster) {
-      cluster = ((ICluster) data);
-      baseStr = (baseStr + '/'
-          + cluster.getOwner().getPathComponentSuggestion() + '/'
-          + cluster.getPathComponentSuggestion());
-    }
-
+      final ISemanticComponent selection) {
     if (selection == null) {
-      return baseStr;
+      return base;
     }
-    return (baseStr + '/' + selection.getPathComponentSuggestion());
+    return (base + "/for/" + selection.getPathComponentSuggestion()); //$NON-NLS-1$
   }
 
   /** {@inheritDoc} */
@@ -94,8 +79,7 @@ final class _FigureSeriesRenderer extends FigureSeriesRenderer {
   @Override
   public final String getFigureSeriesPathComponentSuggestion() {
     return _FigureSeriesRenderer._basePathComponentSelection(
-        this.m_owner.m_pathComponent, this.m_selection,
-        this.m_owner.m_data);
+        this.m_owner.m_pathComponent, this.m_selection);
   }
 
   /** {@inheritDoc} */

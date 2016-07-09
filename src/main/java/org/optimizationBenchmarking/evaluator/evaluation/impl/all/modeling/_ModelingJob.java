@@ -84,6 +84,9 @@ final class _ModelingJob extends ExperimentSetJob {
   /** the normal line */
   IStrokeStyle m_normalLine;
 
+  /** the base path suggestion */
+  private String m_basePathSuggestion;
+
   /**
    * Create the modeling job
    *
@@ -165,9 +168,12 @@ final class _ModelingJob extends ExperimentSetJob {
    * @return the path component suggestion
    */
   final String _getPathComponentSuggestion() {
-    return _ModelingJob.BASE_PATH_COMPONENT + '/'
-        + this.m_transformationX.getPathComponentSuggestion() + '_'
-        + this.m_transformationY.getPathComponentSuggestion();
+    if (this.m_basePathSuggestion == null) {
+      this.m_basePathSuggestion = ((((_ModelingJob.BASE_PATH_COMPONENT
+          + '/') + this.m_transformationX.getPathComponentSuggestion())
+          + '_') + this.m_transformationY.getPathComponentSuggestion());
+    }
+    return this.m_basePathSuggestion;
   }
 
   /** {@inheritDoc} */
@@ -219,8 +225,8 @@ final class _ModelingJob extends ExperimentSetJob {
         this.__writeIntro(data, clustering, body, styles);
 
         if (clustering != null) {
-          Renderers.renderSections(body, null, new _ClusterIterator(this,
-              clustering.getData().iterator(), logger));
+          Renderers.renderSections(body, null,
+              new _ClusterIterator(this, clustering, logger));
         } else {
           Renderers.renderSection(body, false, null, new _ForExperimentSet(
               this, data, logger, this._getPathComponentSuggestion()));

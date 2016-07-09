@@ -32,7 +32,7 @@ final class _ForAll extends _Section {
   _ForAll(final IExperimentSet data,
       final PerInstanceRuns<IFittingResult> results, final EModelInfo info,
       final _ModelingJob job, final String pathComponent) {
-    super(data, results, info, job, (pathComponent + "_all")); //$NON-NLS-1$
+    super(data, results, info, job, (pathComponent + "/all")); //$NON-NLS-1$
   }
 
   /** {@inheritDoc} */
