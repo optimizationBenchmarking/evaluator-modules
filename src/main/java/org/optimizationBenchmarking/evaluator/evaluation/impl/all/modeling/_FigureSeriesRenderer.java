@@ -65,7 +65,7 @@ final class _FigureSeriesRenderer extends FigureSeriesRenderer {
     if (selection == null) {
       return base;
     }
-    return (base + "/for/" + selection.getPathComponentSuggestion()); //$NON-NLS-1$
+    return (base + '/' + selection.getPathComponentSuggestion());
   }
 
   /** {@inheritDoc} */
