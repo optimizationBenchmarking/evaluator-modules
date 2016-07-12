@@ -14,12 +14,11 @@ import org.optimizationBenchmarking.evaluator.data.spec.IDimension;
 import org.optimizationBenchmarking.evaluator.data.spec.IDimensionSet;
 import org.optimizationBenchmarking.evaluator.data.spec.IExperimentSet;
 import org.optimizationBenchmarking.evaluator.evaluation.impl.abstr.ExperimentSetJob;
+import org.optimizationBenchmarking.evaluator.evaluation.utils.SectionRenderer;
+import org.optimizationBenchmarking.evaluator.evaluation.utils.figures.XYFigureConfiguration;
 import org.optimizationBenchmarking.utils.comparison.Compare;
 import org.optimizationBenchmarking.utils.config.Configuration;
-import org.optimizationBenchmarking.utils.document.impl.FigureSizeParser;
-import org.optimizationBenchmarking.utils.document.impl.Renderers;
 import org.optimizationBenchmarking.utils.document.impl.SemanticComponentUtils;
-import org.optimizationBenchmarking.utils.document.spec.EFigureSize;
 import org.optimizationBenchmarking.utils.document.spec.EMathComparison;
 import org.optimizationBenchmarking.utils.document.spec.IComplexText;
 import org.optimizationBenchmarking.utils.document.spec.IDocument;
@@ -76,13 +75,13 @@ final class _ModelingJob extends ExperimentSetJob {
   /** the clusterer, or {@code null} if none was requested */
   private final Attribute<? super IExperimentSet, ? extends IClustering> m_clusterer;
 
-  /** the figure size */
-  final EFigureSize m_figureSize;
+  /** the figure configuration */
+  final XYFigureConfiguration m_figureConfig;
 
   /** the thin line */
-  IStrokeStyle m_thinLine;
+  IStrokeStyle m_strokeForRuns;
   /** the normal line */
-  IStrokeStyle m_normalLine;
+  IStrokeStyle m_strokeForModels;
 
   /** the base path suggestion */
   private String m_basePathSuggestion;
@@ -155,8 +154,12 @@ final class _ModelingJob extends ExperimentSetJob {
 
     this.m_clusterer = ClustererLoader.configureClustering(data, config);
 
-    this.m_figureSize = config.get(Modeler.PARAM_FIGURE_SIZE,
-        FigureSizeParser.INSTANCE, EFigureSize.PAGE_3_PER_ROW);
+    if (this.m_overall.m_plotModels || this.m_perAlgorithm.m_plotModels
+        || this.m_perInstance.m_plotModels) {
+      this.m_figureConfig = new XYFigureConfiguration(config, data);
+    } else {
+      this.m_figureConfig = null;
+    }
 
     this.m_models = new LinkedHashMap<>();
 
@@ -192,8 +195,8 @@ final class _ModelingJob extends ExperimentSetJob {
               this.m_dimX));
     }
 
-    this.m_thinLine = styles.getThinStroke();
-    this.m_normalLine = styles.getThickStroke();
+    this.m_strokeForRuns = styles.getDefaultStroke();
+    this.m_strokeForModels = styles.getThickStroke();
   }
 
   /** {@inheritDoc} */
@@ -225,11 +228,12 @@ final class _ModelingJob extends ExperimentSetJob {
         this.__writeIntro(data, clustering, body, styles);
 
         if (clustering != null) {
-          Renderers.renderSections(body, null,
+          SectionRenderer.renderSections(body, null,
               new _ClusterIterator(this, clustering, logger));
         } else {
-          Renderers.renderSection(body, false, null, new _ForExperimentSet(
-              this, data, logger, this._getPathComponentSuggestion()));
+          SectionRenderer.renderSection(body, false, null,
+              new _ForExperimentSet(this, data, logger,
+                  this._getPathComponentSuggestion()));
         }
       }
     }

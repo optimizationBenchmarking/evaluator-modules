@@ -5,8 +5,8 @@ import java.util.logging.Logger;
 
 import org.optimizationBenchmarking.evaluator.attributes.clusters.ICluster;
 import org.optimizationBenchmarking.evaluator.attributes.clusters.IClustering;
+import org.optimizationBenchmarking.evaluator.evaluation.utils.SectionRenderer;
 import org.optimizationBenchmarking.utils.collections.iterators.BasicIterator;
-import org.optimizationBenchmarking.utils.document.impl.SectionRenderer;
 
 /** an iterator for optional sections */
 final class _ClusterIterator extends BasicIterator<SectionRenderer> {

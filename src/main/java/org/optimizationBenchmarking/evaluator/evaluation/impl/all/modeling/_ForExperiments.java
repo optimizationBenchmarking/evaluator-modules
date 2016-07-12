@@ -115,7 +115,7 @@ final class _ForExperiments extends _Section {
 
   /** {@inheritDoc} */
   @Override
-  protected final void doRenderSectionTitle(final IComplexText title) {
+  protected final void renderSectionTitle(final IComplexText title) {
     title.append("Models Grouped by Algorithm Setup"); //$NON-NLS-1$
   }
 

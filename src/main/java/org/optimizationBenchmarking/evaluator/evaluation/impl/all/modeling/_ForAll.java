@@ -83,7 +83,7 @@ final class _ForAll extends _Section {
 
   /** {@inheritDoc} */
   @Override
-  protected final void doRenderSectionTitle(final IComplexText title) {
+  protected final void renderSectionTitle(final IComplexText title) {
     title.append("All Models without Grouping"); //$NON-NLS-1$
   }
 

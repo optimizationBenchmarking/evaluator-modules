@@ -10,8 +10,7 @@ import org.optimizationBenchmarking.evaluator.data.spec.IExperiment;
 import org.optimizationBenchmarking.evaluator.data.spec.IExperimentSet;
 import org.optimizationBenchmarking.evaluator.data.spec.IInstance;
 import org.optimizationBenchmarking.evaluator.data.spec.IInstanceRuns;
-import org.optimizationBenchmarking.utils.document.impl.Renderers;
-import org.optimizationBenchmarking.utils.document.impl.SectionRenderer;
+import org.optimizationBenchmarking.evaluator.evaluation.utils.SectionRenderer;
 import org.optimizationBenchmarking.utils.document.spec.ELabelType;
 import org.optimizationBenchmarking.utils.document.spec.EMathComparison;
 import org.optimizationBenchmarking.utils.document.spec.IComplexText;
@@ -83,9 +82,9 @@ abstract class _Section extends SectionRenderer
 
   /** {@inheritDoc} */
   @Override
-  protected void doRenderSectionBody(final boolean isNewSection,
+  protected void renderSectionBody(final boolean isNewSection,
       final ISectionBody body) {
-    Renderers.renderSections(body, null, this);
+    SectionRenderer.renderSections(body, null, this);
   }
 
   /**
@@ -164,16 +163,15 @@ abstract class _Section extends SectionRenderer
     body.reference(ETextCase.IN_SENTENCE, ESequenceMode.AND, figureLabel);
     body.append(
         " we plot the fitted models over the actual measured data. Each one of the "); //$NON-NLS-1$
-    this.m_job.m_thinLine.appendDescription(ETextCase.IN_SENTENCE, body,
-        false);
+    this.m_job.m_strokeForRuns.appendDescription(ETextCase.IN_SENTENCE,
+        body, false);
     body.append(" stands for an independent run, while the colored "); //$NON-NLS-1$
-    this.m_job.m_normalLine.appendDescription(ETextCase.IN_SENTENCE, body,
-        false);
+    this.m_job.m_strokeForModels.appendDescription(ETextCase.IN_SENTENCE,
+        body, false);
     body.append(" represents the fitted model."); //$NON-NLS-1$
 
-    Renderers.renderFigures(
-        new _FigureSeriesRenderer(this, selection, results, figureLabel),
-        null, body);
+    new _FigureSeriesRenderer(this, selection)
+        .render(this.m_job.m_figureConfig, results, figureLabel, body);
   }
 
   /**
@@ -396,7 +394,7 @@ abstract class _Section extends SectionRenderer
       final Entry<IInstanceRuns, IFittingResult>[] results,
       final IComplexText caption) {
     caption.append("All models ("); //$NON-NLS-1$
-    this.m_job.m_normalLine.appendDescription(ETextCase.IN_SENTENCE,
+    this.m_job.m_strokeForModels.appendDescription(ETextCase.IN_SENTENCE,
         caption, false);
     caption.append(" lines)");//$NON-NLS-1$
     if (selection != null) {
@@ -415,8 +413,8 @@ abstract class _Section extends SectionRenderer
   private final void __printRestOfFigureDescription(
       final IComplexText caption) {
     caption.append(" rendered on top of the actually measured runs ("); //$NON-NLS-1$
-    this.m_job.m_thinLine.appendDescription(ETextCase.IN_SENTENCE, caption,
-        false);
+    this.m_job.m_strokeForRuns.appendDescription(ETextCase.IN_SENTENCE,
+        caption, false);
     caption.append(" lines) in terms of "); //$NON-NLS-1$
     this.m_job.m_transformationY.printDescription(caption,
         ETextCase.IN_SENTENCE);
@@ -442,18 +440,18 @@ abstract class _Section extends SectionRenderer
    *          the runs
    * @param result
    *          the fitting result
-   * @param model
-   *          the model
    * @param caption
    *          the caption text
    */
   void _renderFigureCaption(final boolean isPartOfSeries,
       final ISemanticComponent selection, final IInstanceRuns runs,
-      final IFittingResult result, final _Model model,
-      final IComplexText caption) {
+      final IFittingResult result, final IComplexText caption) {
+    final _Model model;
     IExperiment experiment;
     IInstance instance;
     boolean has;
+
+    model = this.m_job.m_models.get(result.getFittedFunction());
 
     if (!isPartOfSeries) {
       caption.append("Fitted model for "); //$NON-NLS-1$
@@ -482,7 +480,7 @@ abstract class _Section extends SectionRenderer
     if (!isPartOfSeries) {
       caption.append(' ');
       caption.append('(');
-      this.m_job.m_normalLine.appendDescription(ETextCase.IN_SENTENCE,
+      this.m_job.m_strokeForModels.appendDescription(ETextCase.IN_SENTENCE,
           caption, false);
       caption.append(" line)"); //$NON-NLS-1$
       this.__printRestOfFigureDescription(caption);

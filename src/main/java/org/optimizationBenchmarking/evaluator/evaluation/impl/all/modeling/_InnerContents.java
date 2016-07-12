@@ -3,7 +3,7 @@ package org.optimizationBenchmarking.evaluator.evaluation.impl.all.modeling;
 import java.util.Map;
 
 import org.optimizationBenchmarking.evaluator.data.spec.IInstanceRuns;
-import org.optimizationBenchmarking.utils.document.impl.SectionRenderer;
+import org.optimizationBenchmarking.evaluator.evaluation.utils.SectionRenderer;
 import org.optimizationBenchmarking.utils.document.spec.IComplexText;
 import org.optimizationBenchmarking.utils.document.spec.ISectionBody;
 import org.optimizationBenchmarking.utils.document.spec.ISemanticComponent;
@@ -38,14 +38,14 @@ final class _InnerContents extends SectionRenderer {
 
   /** {@inheritDoc} */
   @Override
-  protected final void doRenderSectionTitle(final IComplexText title) {// empty
+  protected final void renderSectionTitle(final IComplexText title) {// empty
     this.m_owner._writeSubSectionTitle(title, this.m_innerSelection,
         this.m_innerResults);
   }
 
   /** {@inheritDoc} */
   @Override
-  protected final void doRenderSectionBody(final boolean isNewSection,
+  protected final void renderSectionBody(final boolean isNewSection,
       final ISectionBody body) {// empty
     this.m_owner._writeSubSectionBody(isNewSection, body,
         this.m_innerSelection, this.m_innerResults);

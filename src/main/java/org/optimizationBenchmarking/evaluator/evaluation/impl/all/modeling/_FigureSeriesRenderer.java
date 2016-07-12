@@ -1,31 +1,49 @@
 package org.optimizationBenchmarking.evaluator.evaluation.impl.all.modeling;
 
+import java.awt.Color;
+import java.util.Iterator;
 import java.util.Map.Entry;
+import java.util.concurrent.Future;
 
+import org.optimizationBenchmarking.evaluator.attributes.functions.DimensionTransformation;
+import org.optimizationBenchmarking.evaluator.data.spec.IExperiment;
+import org.optimizationBenchmarking.evaluator.data.spec.IInstance;
 import org.optimizationBenchmarking.evaluator.data.spec.IInstanceRuns;
+import org.optimizationBenchmarking.evaluator.data.spec.IRun;
+import org.optimizationBenchmarking.evaluator.evaluation.utils.figures.FigureSeriesRenderer;
+import org.optimizationBenchmarking.evaluator.evaluation.utils.figures.XYFigureConfiguration;
+import org.optimizationBenchmarking.utils.chart.spec.ELegendMode;
+import org.optimizationBenchmarking.utils.chart.spec.ELineType;
+import org.optimizationBenchmarking.utils.chart.spec.IAxis;
+import org.optimizationBenchmarking.utils.chart.spec.ILine2D;
+import org.optimizationBenchmarking.utils.chart.spec.ILineChart2D;
 import org.optimizationBenchmarking.utils.collections.iterators.ArrayIterator;
-import org.optimizationBenchmarking.utils.document.impl.FigureSeriesRenderer;
-import org.optimizationBenchmarking.utils.document.spec.EFigureSize;
 import org.optimizationBenchmarking.utils.document.spec.IComplexText;
-import org.optimizationBenchmarking.utils.document.spec.ILabel;
-import org.optimizationBenchmarking.utils.document.spec.ILabelBuilder;
+import org.optimizationBenchmarking.utils.document.spec.IFigure;
 import org.optimizationBenchmarking.utils.document.spec.ISemanticComponent;
+import org.optimizationBenchmarking.utils.math.functions.UnaryFunction;
+import org.optimizationBenchmarking.utils.math.functions.compound.UnaryFunctionBuilder;
+import org.optimizationBenchmarking.utils.math.matrix.AbstractMatrix;
+import org.optimizationBenchmarking.utils.math.matrix.impl.DoubleMatrix1D;
+import org.optimizationBenchmarking.utils.math.matrix.processing.FunctionSamplingJob;
+import org.optimizationBenchmarking.utils.math.matrix.processing.MultiMatrixColumnTransformationJob;
+import org.optimizationBenchmarking.utils.math.statistics.aggregate.CompoundAggregate;
+import org.optimizationBenchmarking.utils.math.statistics.aggregate.FiniteMaximumAggregate;
+import org.optimizationBenchmarking.utils.math.statistics.aggregate.FiniteMinimumAggregate;
+import org.optimizationBenchmarking.utils.math.statistics.aggregate.IAggregate;
+import org.optimizationBenchmarking.utils.math.text.DefaultParameterRenderer;
 import org.optimizationBenchmarking.utils.ml.fitting.spec.IFittingResult;
+import org.optimizationBenchmarking.utils.parallel.Execute;
+import org.optimizationBenchmarking.utils.text.textOutput.MemoryTextOutput;
 
 /** the figure series renderer */
-final class _FigureSeriesRenderer extends FigureSeriesRenderer {
+final class _FigureSeriesRenderer extends
+    FigureSeriesRenderer<XYFigureConfiguration, Entry<IInstanceRuns, IFittingResult>[], Entry<IInstanceRuns, IFittingResult>> {
 
   /** the owner */
   private final _Section m_owner;
   /** the selection */
   private final ISemanticComponent m_selection;
-  /** the results */
-  private final Entry<IInstanceRuns, IFittingResult>[] m_theResults;
-  /** the internal iterator */
-  private final ArrayIterator<Entry<IInstanceRuns, IFittingResult>> m_iterator;
-
-  /** the label to use */
-  final ILabel m_useLabel;
 
   /**
    * create the selection
@@ -34,79 +52,307 @@ final class _FigureSeriesRenderer extends FigureSeriesRenderer {
    *          the owning section
    * @param selection
    *          the selection
-   * @param results
-   *          the results
-   * @param useLabel
-   *          the label to use
    */
   _FigureSeriesRenderer(final _Section owner,
-      final ISemanticComponent selection,
-      final Entry<IInstanceRuns, IFittingResult>[] results,
-      final ILabel useLabel) {
+      final ISemanticComponent selection) {
     super();
     this.m_owner = owner;
     this.m_selection = selection;
-    this.m_theResults = results;
-    this.m_iterator = new ArrayIterator<>(results);
-    this.m_useLabel = useLabel;
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  protected final Iterator<Entry<IInstanceRuns, IFittingResult>> getFigureData(
+      final Entry<IInstanceRuns, IFittingResult>[] sourceData) {
+    return new ArrayIterator<>(sourceData);
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  protected final void renderFigureSeriesCaption(
+      final Entry<IInstanceRuns, IFittingResult>[] sourceData,
+      final IComplexText caption) {
+    this.m_owner._renderFigureSeriesCaption(this.m_selection, sourceData,
+        caption);
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  protected final String getFigureSeriesPathComponentSuggestion(
+      final XYFigureConfiguration configuration,
+      final Entry<IInstanceRuns, IFittingResult>[] sourceData) {
+    final String addendum;
+    String path;
+
+    path = this.m_owner.m_pathComponent;
+
+    addendum = configuration.getPathComponentSuggestion();
+    if ((addendum != null) && (addendum.length() > 0)) {
+      path = (path + '_' + addendum);
+    }
+
+    if (this.m_selection != null) {
+      return (path + '/' + this.m_selection.getPathComponentSuggestion());
+    }
+
+    return path;
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  protected final String getItemFigurePathComponentSuggestion(
+      final XYFigureConfiguration configuration,
+      final Entry<IInstanceRuns, IFittingResult>[] sourceData,
+      final Entry<IInstanceRuns, IFittingResult> figureData) {
+    final IInstanceRuns runs;
+    final IInstance instance;
+    final IExperiment experiment;
+
+    runs = figureData.getKey();
+    instance = runs.getInstance();
+    experiment = runs.getOwner();
+
+    if (instance == this.m_selection) {
+      return experiment.getPathComponentSuggestion();
+    }
+    if (experiment == this.m_selection) {
+      return instance.getPathComponentSuggestion();
+    }
+    return experiment.getPathComponentSuggestion() + '_'
+        + instance.getPathComponentSuggestion();
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  protected final void renderLegendFigure(
+      final XYFigureConfiguration configuration,
+      final Entry<IInstanceRuns, IFittingResult>[] sourceData,
+      final Entry<IInstanceRuns, IFittingResult> figureData,
+      final IFigure figure) {
+    try (final IComplexText caption = figure.caption()) {
+      caption.append("legend"); //$NON-NLS-1$
+    }
+    this.__renderFigure(figureData.getKey(), figureData.getValue(),
+        configuration, figure, ELegendMode.CHART_IS_LEGEND);
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  protected final void renderItemFigure(
+      final XYFigureConfiguration configuration,
+      final Entry<IInstanceRuns, IFittingResult>[] sourceData,
+      final Entry<IInstanceRuns, IFittingResult> figureData,
+      final IFigure figure) {
+    final IInstanceRuns runs;
+    final IFittingResult result;
+
+    runs = figureData.getKey();
+    result = figureData.getValue();
+    try (final IComplexText caption = figure.caption()) {
+      this.m_owner._renderFigureCaption(true, this.m_selection, runs,
+          result, caption);
+    }
+    this.__renderFigure(runs, result, configuration, figure,
+        ELegendMode.HIDE_COMPLETE_LEGEND);
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  protected final void renderSingleFigure(
+      final XYFigureConfiguration configuration,
+      final Entry<IInstanceRuns, IFittingResult>[] sourceData,
+      final Entry<IInstanceRuns, IFittingResult> figureData,
+      final IFigure figure) {
+    final IInstanceRuns runs;
+    final IFittingResult result;
+
+    runs = figureData.getKey();
+    result = figureData.getValue();
+    try (final IComplexText caption = figure.caption()) {
+      this.m_owner._renderFigureCaption(false, this.m_selection, runs,
+          result, caption);
+    }
+    this.__renderFigure(runs, result, configuration, figure,
+        ELegendMode.SHOW_COMPLETE_LEGEND);
   }
 
   /**
-   * create a base path component selection
+   * render the figure
    *
-   * @param base
-   *          the base
-   * @param selection
-   *          the selection
-   * @return the component
+   * @param runs
+   *          the runs
+   * @param result
+   *          the results
+   * @param configuration
+   *          the configuration
+   * @param figure
+   *          the destination figure
+   * @param legendMode
+   *          the legend mode
    */
-  static final String _basePathComponentSelection(final String base,
-      final ISemanticComponent selection) {
-    if (selection == null) {
-      return base;
+  private final void __renderFigure(final IInstanceRuns runs,
+      final IFittingResult result,
+      final XYFigureConfiguration configuration, final IFigure figure,
+      final ELegendMode legendMode) {
+    this.__renderFigure(runs, result,
+        configuration.getXAxisConfiguredMin(),
+        configuration.getXAxisConfiguredMax(),
+        configuration.getYAxisConfiguredMin(),
+        configuration.getYAxisConfiguredMax(),
+        ((legendMode == ELegendMode.CHART_IS_LEGEND) ? true
+            : configuration.hasAxisTitles()),
+        legendMode, figure);
+  }
+
+  /**
+   * render the figure
+   *
+   * @param runs
+   *          the runs
+   * @param result
+   *          the result
+   * @param configuredMinX
+   *          the configured minimum x
+   * @param configuredMaxX
+   *          the configured maximum x
+   * @param configuredMinY
+   *          the configured minimum y
+   * @param configuredMaxY
+   *          the configured maximum x
+   * @param showAxisTitles
+   *          should we print axis titles?
+   * @param legendMode
+   *          the legend mode
+   * @param figure
+   *          the destination figure
+   */
+  private final void __renderFigure(final IInstanceRuns runs,
+      final IFittingResult result, final Number configuredMinX,
+      final Number configuredMaxX, final Number configuredMinY,
+      final Number configuredMaxY, final boolean showAxisTitles,
+      final ELegendMode legendMode,
+
+      final IFigure figure) {
+    final DimensionTransformation dimX, dimY;
+    final int colX, colY;
+    final _Model model;
+    Future<AbstractMatrix[]> backgroundLinesGetter;
+    Future<DoubleMatrix1D> modelLinesGetter;
+    boolean plotLineName;
+
+    FiniteMaximumAggregate maxX;
+    FiniteMinimumAggregate minX;
+    IAggregate aggX;
+    MemoryTextOutput memTO;
+    UnaryFunction xTransformation, yTransformation, function;
+
+    dimX = this.m_owner.m_job.m_transformationX;
+    dimY = this.m_owner.m_job.m_transformationY;
+
+    xTransformation = dimX.use(runs);
+    yTransformation = dimY.use(runs);
+
+    colX = dimX.getDimension().getIndex();
+    colY = dimY.getDimension().getIndex();
+
+    // launch the transformation of the original run data in the background
+    backgroundLinesGetter = Execute
+        .parallel(new MultiMatrixColumnTransformationJob(//
+            runs.getData(), new int[] { colX, colY },
+            new UnaryFunction[] { xTransformation, yTransformation }));
+
+    // compute the range over which we need to calculate the model function
+    minX = new FiniteMinimumAggregate();
+    maxX = new FiniteMaximumAggregate();
+    aggX = CompoundAggregate.combine(minX, maxX);
+
+    for (final IRun run : runs.getData()) {
+      run.aggregateColumn(colX, aggX);
     }
-    return (base + '/' + selection.getPathComponentSuggestion());
-  }
+    aggX = null;
 
-  /** {@inheritDoc} */
-  @Override
-  public final ILabel createFigureSeriesLabel(
-      final ILabelBuilder builder) {
-    return this.m_useLabel;
-  }
+    function = result.getFittedFunction()
+        .toUnaryFunction(result.getFittedParametersRef());
 
-  /** {@inheritDoc} */
-  @Override
-  public final String getFigureSeriesPathComponentSuggestion() {
-    return _FigureSeriesRenderer._basePathComponentSelection(
-        this.m_owner.m_pathComponent, this.m_selection);
-  }
+    // now let us sample the model
+    modelLinesGetter = Execute.parallel(new FunctionSamplingJob(
+        UnaryFunctionBuilder.getInstance().compound(yTransformation,
+            function),
+        minX.doubleValue(), maxX.doubleValue(), xTransformation));
+    model = this.m_owner.m_job.m_models.get(result.getFittedFunction());
 
-  /** {@inheritDoc} */
-  @Override
-  public final EFigureSize getFigureSize() {
-    return this.m_owner.m_job.m_figureSize;
-  }
+    try (final ILineChart2D chart = figure.lineChart2D()) {
+      chart.setLegendMode(legendMode);
 
-  /** {@inheritDoc} */
-  @Override
-  public final void renderFigureSeriesCaption(final IComplexText caption) {
-    this.m_owner._renderFigureSeriesCaption(this.m_selection,
-        this.m_theResults, caption);
-  }
+      try (final IAxis axis = chart.xAxis()) {
+        if (configuredMinX == null) {
+          axis.setMinimum(new FiniteMinimumAggregate());
+        } else {
+          axis.setMinimum(configuredMinX);
+        }
+        if (configuredMaxX == null) {
+          axis.setMaximum(new FiniteMaximumAggregate());
+        } else {
+          axis.setMinimum(configuredMaxX);
+        }
 
-  /** {@inheritDoc} */
-  @Override
-  public final boolean hasNext() {
-    return this.m_iterator.hasNext();
-  }
+        memTO = new MemoryTextOutput();
+        this.m_owner.m_job.m_transformationX.mathRender(memTO,
+            DefaultParameterRenderer.INSTANCE);
+        axis.setTitle(memTO.toString());
+        memTO.clear();
+      }
 
-  /** {@inheritDoc} */
-  @Override
-  public final _FigureRenderer next() {
-    final Entry<IInstanceRuns, IFittingResult> result;
-    result = this.m_iterator.next();
-    return new _FigureRenderer(this.m_owner, this.m_selection,
-        result.getKey(), result.getValue(), this.m_useLabel);
+      try (final IAxis axis = chart.yAxis()) {
+
+        if (configuredMinY == null) {
+          axis.setMinimum(new FiniteMinimumAggregate());
+        } else {
+          axis.setMinimum(configuredMinY);
+        }
+        if (configuredMaxY == null) {
+          axis.setMaximum(new FiniteMaximumAggregate());
+        } else {
+          axis.setMinimum(configuredMaxY);
+        }
+
+        this.m_owner.m_job.m_transformationY.mathRender(memTO,
+            DefaultParameterRenderer.INSTANCE);
+        axis.setTitle(memTO.toString());
+        memTO = null;
+      }
+
+      plotLineName = legendMode.isLegendShown();
+      for (final AbstractMatrix matrix : backgroundLinesGetter.get()) {
+        try (final ILine2D line = chart.line()) {
+          line.setType(ELineType.SMOOTH);
+          line.setColor(Color.GRAY);
+          line.setStroke(this.m_owner.m_job.m_strokeForRuns.getStroke());
+          line.setData(matrix);
+          if (plotLineName) {
+            line.setTitle("measured run"); //$NON-NLS-1$
+            plotLineName = false;
+          }
+        }
+      }
+      backgroundLinesGetter = null;
+
+      try (final ILine2D line = chart.line()) {
+        line.setType(ELineType.SMOOTH);
+        line.setColor(model.m_style.getColor());
+        line.setStroke(this.m_owner.m_job.m_strokeForModels.getStroke());
+        line.setData(modelLinesGetter.get());
+        if (legendMode.isLegendShown()) {
+          line.setTitle("fitted model");//$NON-NLS-1$
+        }
+        modelLinesGetter = null;
+      }
+
+    } catch (final RuntimeException runtime) {
+      throw runtime;
+    } catch (final Throwable error) {
+      throw new IllegalStateException("Cannot plot model functions.", //$NON-NLS-1$
+          error);
+    }
   }
 }

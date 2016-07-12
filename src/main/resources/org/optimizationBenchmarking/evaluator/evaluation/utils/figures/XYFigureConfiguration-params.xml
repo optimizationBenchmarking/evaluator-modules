@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cd:configurationDefinition
+	xmlns:cd="http://www.optimizationBenchmarking.org/formats/configuration/configurationDef.1.0.xsd"
+	allowsMore="true">
+
+	<cd:inherit
+		class="org.optimizationBenchmarking.evaluator.evaluation.utils.figures.FigureConfiguration" />
+
+	<cd:boolean name="showAxisTitles" default="true"
+		description="Should we show the titles of the axes?" />
+
+	<cd:double name="minX" min="-inf" max="inf" default="0"
+		description="Override the default minimum value of the x-axis." />
+	<cd:double name="maxX" min="-inf" max="inf" default="0"
+		description="Override the default maximum value of the x-axis." />
+	<cd:double name="minY" min="-inf" max="inf" default="0"
+		description="Override the default minimum value of the y-axis." />
+	<cd:double name="maxY" min="-inf" max="inf" default="1"
+		description="Override the default maximum value of the y-axis." />
+
+</cd:configurationDefinition>

@@ -67,6 +67,7 @@
 		class="org.optimizationBenchmarking.evaluator.attributes.clusters.ClustererLoader" />
 
   <cd:inherit
-    class="org.optimizationBenchmarking.utils.document.impl.FigureSizeParser" />
+    class="org.optimizationBenchmarking.evaluator.evaluation.utils.figures.XYFigureConfiguration" />
+
 
 </cd:configurationDefinition>
