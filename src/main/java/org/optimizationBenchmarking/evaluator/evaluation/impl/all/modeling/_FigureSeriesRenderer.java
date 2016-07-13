@@ -371,7 +371,7 @@ final class _FigureSeriesRenderer extends
 
   /**
    * make a run color
-   * 
+   *
    * @param index
    *          the run index
    * @param total
@@ -380,7 +380,7 @@ final class _FigureSeriesRenderer extends
    */
   private static final Color __makeRunColor(final int index,
       final int total) {
-    float value;
+    int value;
     int totalColors, useIndex;
 
     if (index <= 0) {
@@ -396,7 +396,8 @@ final class _FigureSeriesRenderer extends
       useIndex = ((useIndex << 1) % totalColors);
     }
 
-    value = ((float) (((useIndex / ((double) totalColors)) * 77d) + 30d));
+    value = ((int) (0.5d + (((256 + (((useIndex / ((double) totalColors))//
+        * 205d) + 30d)) % 256))));
     return new Color(value, value, value);
   }
 }
