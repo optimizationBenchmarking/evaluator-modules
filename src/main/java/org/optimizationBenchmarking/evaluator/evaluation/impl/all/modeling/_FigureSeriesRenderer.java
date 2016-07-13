@@ -238,8 +238,9 @@ final class _FigureSeriesRenderer extends
     final _Model model;
     Future<AbstractMatrix[]> backgroundLinesGetter;
     Future<DoubleMatrix1D> modelLinesGetter;
+    AbstractMatrix[] matrices;
     boolean plotLineName;
-
+    int index;
     FiniteMaximumAggregate maxX;
     FiniteMinimumAggregate minX;
     IAggregate aggX;
@@ -330,19 +331,24 @@ final class _FigureSeriesRenderer extends
       }
 
       plotLineName = legendMode.isLegendShown();
-      for (final AbstractMatrix matrix : backgroundLinesGetter.get()) {
+      matrices = backgroundLinesGetter.get();
+      backgroundLinesGetter = null;
+      index = 0;
+      for (final AbstractMatrix matrix : matrices) {
         try (final ILine2D line = chart.line()) {
-          line.setType(ELineType.SMOOTH);
-          line.setColor(Color.GRAY);
-          line.setStroke(this.m_owner.m_job.m_strokeForRuns.getStroke());
           line.setData(matrix);
+          matrices[index++] = null;
+          line.setType(ELineType.STAIRS_KEEP_LEFT);
+          line.setColor(_FigureSeriesRenderer.__makeRunColor(index,
+              matrices.length));
+          line.setStroke(this.m_owner.m_job.m_strokeForRuns.getStroke());
           if (plotLineName) {
             line.setTitle("measured run"); //$NON-NLS-1$
             plotLineName = false;
           }
         }
       }
-      backgroundLinesGetter = null;
+      matrices = null;
 
       try (final ILine2D line = chart.line()) {
         line.setType(ELineType.SMOOTH);
@@ -361,5 +367,36 @@ final class _FigureSeriesRenderer extends
       throw new IllegalStateException("Cannot plot model functions.", //$NON-NLS-1$
           error);
     }
+  }
+
+  /**
+   * make a run color
+   * 
+   * @param index
+   *          the run index
+   * @param total
+   *          the total number of runs
+   * @return the run color
+   */
+  private static final Color __makeRunColor(final int index,
+      final int total) {
+    float value;
+    int totalColors, useIndex;
+
+    if (index <= 0) {
+      return Color.GRAY;
+    }
+
+    useIndex = (index - 1);
+    totalColors = (total - 1);
+
+    if ((useIndex % 1) == 0) {
+      useIndex = ((totalColors - (useIndex << 1)) % totalColors);
+    } else {
+      useIndex = ((useIndex << 1) % totalColors);
+    }
+
+    value = ((float) (((useIndex / ((double) totalColors)) * 77d) + 30d));
+    return new Color(value, value, value);
   }
 }
