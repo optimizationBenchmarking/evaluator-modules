@@ -66,15 +66,18 @@ abstract class _Section extends SectionRenderer
       throw new IllegalArgumentException(
           "PerInstanceRuns cannot be null."); //$NON-NLS-1$
     }
-    this.m_data = data;
-    this.m_results = results;
     if (info == null) {
       throw new IllegalArgumentException(
           "EModelInfo setting cannot be null."); //$NON-NLS-1$
     }
     if (job == null) {
-      throw new IllegalArgumentException("Modeling jobcannot be null."); //$NON-NLS-1$
+      throw new IllegalArgumentException("Modeling job cannot be null."); //$NON-NLS-1$
     }
+    if (pathComponent == null) {
+      throw new IllegalArgumentException("Path component cannot be null."); //$NON-NLS-1$
+    }
+    this.m_data = data;
+    this.m_results = results;
     this.m_info = info;
     this.m_job = job;
     this.m_pathComponent = pathComponent;

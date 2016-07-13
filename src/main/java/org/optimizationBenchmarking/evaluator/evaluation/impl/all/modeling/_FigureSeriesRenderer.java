@@ -296,11 +296,14 @@ final class _FigureSeriesRenderer extends
           axis.setMinimum(configuredMaxX);
         }
 
-        memTO = new MemoryTextOutput();
-        this.m_owner.m_job.m_transformationX.mathRender(memTO,
-            DefaultParameterRenderer.INSTANCE);
-        axis.setTitle(memTO.toString());
-        memTO.clear();
+        if (showAxisTitles
+            || (legendMode == ELegendMode.CHART_IS_LEGEND)) {
+          memTO = new MemoryTextOutput();
+          this.m_owner.m_job.m_transformationX.mathRender(memTO,
+              DefaultParameterRenderer.INSTANCE);
+          axis.setTitle(memTO.toString());
+          memTO = null;
+        }
       }
 
       try (final IAxis axis = chart.yAxis()) {
@@ -316,10 +319,14 @@ final class _FigureSeriesRenderer extends
           axis.setMinimum(configuredMaxY);
         }
 
-        this.m_owner.m_job.m_transformationY.mathRender(memTO,
-            DefaultParameterRenderer.INSTANCE);
-        axis.setTitle(memTO.toString());
-        memTO = null;
+        if (showAxisTitles
+            || (legendMode == ELegendMode.CHART_IS_LEGEND)) {
+          memTO = new MemoryTextOutput();
+          this.m_owner.m_job.m_transformationY.mathRender(memTO,
+              DefaultParameterRenderer.INSTANCE);
+          axis.setTitle(memTO.toString());
+          memTO = null;
+        }
       }
 
       plotLineName = legendMode.isLegendShown();

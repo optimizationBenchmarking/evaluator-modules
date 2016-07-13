@@ -36,7 +36,7 @@ final class _ForInstances extends _Section {
   _ForInstances(final IExperimentSet data,
       final PerInstanceRuns<IFittingResult> results, final EModelInfo info,
       final _ModelingJob job, final String pathComponent) {
-    super(data, results, info, job, (pathComponent + "/instance"));//$NON-NLS-1$
+    super(data, results, info, job, (pathComponent + "/instances"));//$NON-NLS-1$
   }
 
   /** {@inheritDoc} */
