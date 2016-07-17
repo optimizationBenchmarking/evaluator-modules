@@ -17,7 +17,7 @@
 
 	<m:module name="Behavior Modeling"
 		class="org.optimizationBenchmarking.evaluator.evaluation.impl.all.modeling.Modeler"
-		description="Model the behavior of each algorithm setup on each benchmark function. Several different common behavior models (functions) are fitted to the measured data and the best fit per setup-instance pair is displayed. This will take much time, but may offer interesting insights." />
+		description="Model the behavior of each algorithm setup on each benchmark function. Several different common behavior models (functions) are fitted to the measured data and the best fit per setup-instance pair is displayed. This will take much time, but may offer interesting insights. Warning: Sometimes plotting graphics may make the documents un-renderable for LaTeX. You can use the LaTeX document driver to get pdf or eps figures for use in your paper, but the generated report may not compile." />
 
 </m:modules>
 	
