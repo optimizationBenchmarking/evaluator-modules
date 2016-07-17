@@ -4,7 +4,7 @@
 
 	<groupId>org.optimizationBenchmarking</groupId>
 	<artifactId>evaluator-modules</artifactId>
-	<version>0.8.6</version>
+	<version>0.8.7</version>
 	<packaging>jar</packaging>
 	<name>Modules of the Evaluator Components</name>
 	<description>The modules of the optimizationBenchmarking.org evaluator.</description>
