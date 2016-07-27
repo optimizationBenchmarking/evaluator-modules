@@ -43,7 +43,7 @@ public final class ExperimentSetFunctions {
     for (final ExperimentFunction func : functions) {
       func.m_owner = this;
     }
-    this.m_functions = new ArrayListView<>(functions);
+    this.m_functions = new ArrayListView<>(functions, false);
   }
 
   /**

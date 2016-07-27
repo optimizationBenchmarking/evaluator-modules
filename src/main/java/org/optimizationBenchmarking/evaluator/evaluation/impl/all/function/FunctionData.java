@@ -34,7 +34,7 @@ public final class FunctionData {
       final ILabel legendLabel) {
     super();
     this.m_clustering = clustering;
-    this.m_functions = new ArrayListView<>(functions);
+    this.m_functions = new ArrayListView<>(functions, false);
     for (final ExperimentSetFunctions esf : functions) {
       esf.m_owner = this;
     }
