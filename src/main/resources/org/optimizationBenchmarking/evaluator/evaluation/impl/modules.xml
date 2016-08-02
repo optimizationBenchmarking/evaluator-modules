@@ -15,6 +15,10 @@
 		class="org.optimizationBenchmarking.evaluator.evaluation.impl.all.ecdf.AllECDF"
 		description="The Empiricial Cumulative Distribution Function (ECDF) &#x2012; the fraction of runs that have reached a certain goal." />
 
+	<m:module name="Grouping Information"
+		class="org.optimizationBenchmarking.evaluator.evaluation.impl.all.grouping.Grouper"
+		description="With this module, you can divide your data into groups according to some criterion and then print detailed information about these groups. The grouping options are the same as for several other modules, but here we will print very detailed information. This makes a lot of sense if you perform something like behavior-based clustering and want to understand what exactly was discovered and why the groups turned out as they did." />
+
 	<m:module name="Behavior Modeling"
 		class="org.optimizationBenchmarking.evaluator.evaluation.impl.all.modeling.Modeler"
 		description="Model the behavior of each algorithm setup on each benchmark function. Several different common behavior models (functions) are fitted to the measured data and the best fit per setup-instance pair is displayed. This will take much time, but may offer interesting insights. Warning: Sometimes plotting graphics may make the documents un-renderable for LaTeX. You can use the LaTeX document driver to get pdf or eps figures for use in your paper, but the generated report may not compile." />
