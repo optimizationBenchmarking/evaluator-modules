@@ -109,13 +109,13 @@ final class _Model implements ISequenceable {
 
   /** {@inheritDoc} */
   @Override
-  public final void toSequence(final boolean isFirstInSequence,
+  public final ETextCase toSequence(final boolean isFirstInSequence,
       final boolean isLastInSequence, final ETextCase textCase,
       final ITextOutput textOut) {
     if (textOut instanceof IComplexText) {
       this._renderStyled((IComplexText) textOut);
-    } else {
-      throw new IllegalStateException("Can only render to IComplexText."); //$NON-NLS-1$
+      return textCase.nextCase();
     }
+    throw new IllegalStateException("Can only render to IComplexText."); //$NON-NLS-1$
   }
 }

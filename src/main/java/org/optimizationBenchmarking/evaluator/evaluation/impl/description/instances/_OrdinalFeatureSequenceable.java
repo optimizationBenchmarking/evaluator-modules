@@ -42,7 +42,7 @@ final class _OrdinalFeatureSequenceable implements ISequenceable {
   /** {@inheritDoc} */
   @SuppressWarnings("resource")
   @Override
-  public final void toSequence(final boolean isFirstInSequence,
+  public final ETextCase toSequence(final boolean isFirstInSequence,
       final boolean isLastInSequence, final ETextCase textCase,
       final ITextOutput textOut) {
     ETextCase next;
@@ -89,7 +89,7 @@ final class _OrdinalFeatureSequenceable implements ISequenceable {
               this.m_logger));
         }
 
-        ESequenceMode.AND.appendSequence(next, seq, true, use);
+        next = ESequenceMode.AND.appendSequence(next, seq, true, use);
       }
     } finally {
       if (use != textOut) {
@@ -102,5 +102,6 @@ final class _OrdinalFeatureSequenceable implements ISequenceable {
         textOut.append(')');
       }
     }
+    return next;
   }
 }

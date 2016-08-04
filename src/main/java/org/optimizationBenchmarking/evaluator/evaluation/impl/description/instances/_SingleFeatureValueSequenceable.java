@@ -36,7 +36,7 @@ final class _SingleFeatureValueSequenceable implements ISequenceable {
 
   /** {@inheritDoc} */
   @Override
-  public final void toSequence(final boolean isFirstInSequence,
+  public final ETextCase toSequence(final boolean isFirstInSequence,
       final boolean isLastInSequence, final ETextCase textCase,
       final ITextOutput textOut) {
 
@@ -52,5 +52,6 @@ final class _SingleFeatureValueSequenceable implements ISequenceable {
         PropertyValueElements.FEATURE_VALUE_INSTANCES
             .get(this.m_featureValue, this.m_logger),
         textOut, textCase.nextCase(), 1);
+    return textCase.nextCase();
   }
 }

@@ -57,7 +57,7 @@ final class _NumericalFeatureSequenceable implements ISequenceable {
   /** {@inheritDoc} */
   @SuppressWarnings("resource")
   @Override
-  public final void toSequence(final boolean isFirstInSequence,
+  public final ETextCase toSequence(final boolean isFirstInSequence,
       final boolean isLastInSequence, final ETextCase textCase,
       final ITextOutput textOut) {
     ETextCase next;
@@ -124,6 +124,7 @@ final class _NumericalFeatureSequenceable implements ISequenceable {
         textOut.append(')');
       }
     }
+    return next;
   }
 
   /**
