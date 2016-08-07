@@ -1295,14 +1295,14 @@ public abstract class FunctionJob extends ExperimentSetJob {
 
     if ((logger != null) && (logger.isLoggable(Level.FINER))) {
       logger.finer("Beginning to compute data for " + //$NON-NLS-1$
-          TextUtils.className(this.getClass()));
+          TextUtils.className(this));
     }
 
     functionData = this.__makeData(data, logger, sectionContainer);
 
     if ((logger != null) && (logger.isLoggable(Level.FINER))) {
       logger.finer(((("Finished computing data for " + //$NON-NLS-1$
-          TextUtils.className(this.getClass())) + ", found ") + //$NON-NLS-1$
+          TextUtils.className(this)) + ", found ") + //$NON-NLS-1$
           ((functionData != null) ? functionData.getData().size() : 0))
           + " clusters with useful data, which will now be processed.");//$NON-NLS-1$
     }
@@ -1324,7 +1324,7 @@ public abstract class FunctionJob extends ExperimentSetJob {
 
     if ((logger != null) && (logger.isLoggable(Level.FINER))) {
       logger.finer("Finished processing of data in " + //$NON-NLS-1$
-          TextUtils.className(this.getClass()));
+          TextUtils.className(this));
     }
   }
 
