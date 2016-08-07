@@ -24,7 +24,7 @@ import org.optimizationBenchmarking.utils.collections.lists.ArrayListView;
 import org.optimizationBenchmarking.utils.comparison.Compare;
 import org.optimizationBenchmarking.utils.config.Configuration;
 import org.optimizationBenchmarking.utils.document.impl.FigureSizeParser;
-import org.optimizationBenchmarking.utils.document.impl.SemanticComponentUtils;
+import org.optimizationBenchmarking.utils.document.impl.SemanticComponentSequenceable;
 import org.optimizationBenchmarking.utils.document.spec.EFigureSize;
 import org.optimizationBenchmarking.utils.document.spec.ELabelType;
 import org.optimizationBenchmarking.utils.document.spec.IComplexText;
@@ -405,9 +405,11 @@ final class _InstanceInformationJob extends ExperimentSetJob {
     if (someDataInstanceSize < instanceSize) {
       if ((instanceSize - someDataInstanceSize) > someDataInstanceSize) {
         body.append(" Data is only available for instances "); //$NON-NLS-1$
-        SemanticComponentUtils.printNames(ESequenceMode.AND,
-            someDataInstanceSet.getData(), true, false,
-            ETextCase.IN_SENTENCE, body);
+        ESequenceMode.AND
+            .appendSequence(ETextCase.IN_SENTENCE,
+                SemanticComponentSequenceable.wrap(
+                    someDataInstanceSet.getData(), true, false, false),
+            body);
         body.append('.');
       } else {
         missing = new ArrayList<>();
@@ -424,8 +426,10 @@ final class _InstanceInformationJob extends ExperimentSetJob {
         if (missing.size() < 10) {
           body.append(' ');
           try (final IPlainText text = body.inBraces()) {
-            SemanticComponentUtils.printNames(ESequenceMode.AND, missing,
-                true, false, ETextCase.IN_SENTENCE, text);
+            ESequenceMode.AND.appendSequence(ETextCase.IN_SENTENCE,
+                SemanticComponentSequenceable.wrap(missing, true, false,
+                    false),
+                text);
           }
         }
         missing.clear();
@@ -456,9 +460,11 @@ final class _InstanceInformationJob extends ExperimentSetJob {
         InTextNumberAppender.INSTANCE.appendTo(allDataInstanceSize,
             ETextCase.IN_SENTENCE, body);
         body.append(" instances "); //$NON-NLS-1$
-        SemanticComponentUtils.printNames(ESequenceMode.AND,
-            allDataInstanceSet.getData(), true, false,
-            ETextCase.IN_SENTENCE, body);
+        ESequenceMode.AND
+            .appendSequence(ETextCase.IN_SENTENCE,
+                SemanticComponentSequenceable.wrap(
+                    allDataInstanceSet.getData(), true, false, false),
+            body);
         body.append(
             ", while at least some experiments have no data for the rest."); //$NON-NLS-1$
       } else {
@@ -474,8 +480,10 @@ final class _InstanceInformationJob extends ExperimentSetJob {
             "at least some experiments do not have data for some instances"); //$NON-NLS-1$
         if (missing.size() < 10) {
           body.append(' ');
-          SemanticComponentUtils.printNames(ESequenceMode.AND, missing,
-              true, false, ETextCase.IN_SENTENCE, body);
+          ESequenceMode.AND.appendSequence(ETextCase.IN_SENTENCE,
+              SemanticComponentSequenceable.wrap(missing, true, false,
+                  false),
+              body);
         }
         missing = null;
         body.append('.');

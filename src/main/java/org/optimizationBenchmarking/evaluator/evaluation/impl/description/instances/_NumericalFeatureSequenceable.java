@@ -151,13 +151,15 @@ final class _NumericalFeatureSequenceable implements ISequenceable {
     if (textOut instanceof IPlainText) {
       try (final IPlainText inside = ((IPlainText) textOut).inBraces()) {
         ESequenceMode.AND.appendNestedSequence(textCase, //
-            SemanticComponentSequenceable.wrap(instances, true, false), //
+            SemanticComponentSequenceable.wrap(instances, true, false,
+                false), //
             true, depth, inside);
       }
     } else {
       textOut.append('[');
       ESequenceMode.AND.appendNestedSequence(textCase, //
-          SemanticComponentSequenceable.wrap(instances, true, false), //
+          SemanticComponentSequenceable.wrap(instances, true, false,
+              false), //
           true, depth, textOut);
       textOut.append(']');
     }
