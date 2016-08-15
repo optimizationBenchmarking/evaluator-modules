@@ -30,6 +30,7 @@ import org.optimizationBenchmarking.utils.document.spec.ISectionBody;
 import org.optimizationBenchmarking.utils.document.spec.ISectionContainer;
 import org.optimizationBenchmarking.utils.graphics.style.spec.IStrokeStyle;
 import org.optimizationBenchmarking.utils.graphics.style.spec.IStyles;
+import org.optimizationBenchmarking.utils.math.functions.basic.Identity;
 import org.optimizationBenchmarking.utils.math.text.ABCParameterRenderer;
 import org.optimizationBenchmarking.utils.ml.fitting.spec.ParametricUnaryFunction;
 import org.optimizationBenchmarking.utils.text.ESequenceMode;
@@ -150,7 +151,9 @@ final class _ModelingJob extends ExperimentSetJob {
           + this.m_dimX.getName()) + '\'') + '.');
     }
 
-    this.m_attribute = new DimensionRelationship(this.m_dimX, this.m_dimY);
+    this.m_attribute = new DimensionRelationship(//
+        new DimensionTransformation(Identity.INSTANCE, this.m_dimX), //
+        new DimensionTransformation(Identity.INSTANCE, this.m_dimY));
 
     this.m_clusterer = ClustererLoader.configureClustering(data, config);
 
