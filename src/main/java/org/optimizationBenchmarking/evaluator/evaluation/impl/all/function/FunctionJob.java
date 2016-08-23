@@ -1043,7 +1043,7 @@ public abstract class FunctionJob extends ExperimentSetJob {
     ICluster cluster;
     IFigure curFigure;
     ILineChart2D curChart;
-    String path, functionName;
+    String path;
     int size, index;
 
     if (data == null) {
@@ -1064,7 +1064,7 @@ public abstract class FunctionJob extends ExperimentSetJob {
     if (this.m_maxY != null) {
       path += ("_y2=" + this.m_maxY); //$NON-NLS-1$
     }
-    functionName = path;
+
     clustering = data.getClustering();
     if (clustering != null) {
       path = (path + '/' + clustering.getPathComponentSuggestion());
@@ -1118,7 +1118,7 @@ public abstract class FunctionJob extends ExperimentSetJob {
         index = 0;
 
         if (this.m_makeLegendFigure) {
-          path = (mainPath + '/' + functionName + "_legend"); //$NON-NLS-1$
+          path = (mainPath + "/_legend"); //$NON-NLS-1$
 
           this.__logFigure(logger, (++index), size);
 
@@ -1140,8 +1140,7 @@ public abstract class FunctionJob extends ExperimentSetJob {
           path = mainPath;
           cluster = experimentSetFunctions2.getCluster();
           if (cluster != null) {
-            path = (path + '/' + functionName + '_'
-                + cluster.getPathComponentSuggestion());
+            path = (path + '/' + cluster.getPathComponentSuggestion());
           }
 
           this.__logFigure(logger, (++index), size);
