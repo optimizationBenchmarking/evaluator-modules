@@ -1035,7 +1035,7 @@ public abstract class FunctionJob extends ExperimentSetJob {
   protected ILabel renderPlots(final FunctionData data,
       final ISectionBody body, final IStyles styles, final Logger logger) {
     final ILabel ret;
-    final String mainPath;
+    final String mainPath, functionName;
     final IClustering clustering;
     final ArrayListView<ExperimentSetFunctions> allFunctions;
     final Future<Void>[] tasks;
@@ -1065,6 +1065,7 @@ public abstract class FunctionJob extends ExperimentSetJob {
       path += ("_y2=" + this.m_maxY); //$NON-NLS-1$
     }
 
+    functionName = path;
     clustering = data.getClustering();
     if (clustering != null) {
       path = (path + '/' + clustering.getPathComponentSuggestion());
@@ -1118,7 +1119,7 @@ public abstract class FunctionJob extends ExperimentSetJob {
         index = 0;
 
         if (this.m_makeLegendFigure) {
-          path = (mainPath + "/_legend"); //$NON-NLS-1$
+          path = "legend"; //$NON-NLS-1$
 
           this.__logFigure(logger, (++index), size);
 
@@ -1137,10 +1138,11 @@ public abstract class FunctionJob extends ExperimentSetJob {
         for (final ExperimentSetFunctions experimentSetFunctions2 : data
             .getData()) {
 
-          path = mainPath;
           cluster = experimentSetFunctions2.getCluster();
           if (cluster != null) {
-            path = (path + '/' + cluster.getPathComponentSuggestion());
+            path = cluster.getPathComponentSuggestion();
+          } else {
+            path = functionName;
           }
 
           this.__logFigure(logger, (++index), size);
