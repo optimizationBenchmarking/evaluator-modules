@@ -174,10 +174,27 @@ final class _ModelingJob extends ExperimentSetJob {
    * @return the path component suggestion
    */
   final String _getPathComponentSuggestion() {
+    String suggestion;
     if (this.m_basePathSuggestion == null) {
-      this.m_basePathSuggestion = ((((_ModelingJob.BASE_PATH_COMPONENT
-          + '/') + this.m_transformationX.getPathComponentSuggestion())
-          + '_') + this.m_transformationY.getPathComponentSuggestion());
+      suggestion = _ModelingJob.BASE_PATH_COMPONENT;
+      if ((this.m_transformationX != null)
+          || (this.m_transformationY != null)) {
+        suggestion += '/';
+        if (this.m_transformationX != null) {
+          suggestion += this.m_transformationX
+              .getPathComponentSuggestion();
+        }
+        if (this.m_transformationY != null) {
+          if (this.m_transformationX != null) {
+            suggestion += '_';
+          }
+          suggestion += this.m_transformationY
+              .getPathComponentSuggestion();
+        }
+      } else {
+        suggestion += _ModelingJob.BASE_PATH_COMPONENT;
+      }
+      this.m_basePathSuggestion = suggestion;
     }
     return this.m_basePathSuggestion;
   }
