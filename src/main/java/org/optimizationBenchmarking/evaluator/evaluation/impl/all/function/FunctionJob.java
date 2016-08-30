@@ -1375,24 +1375,22 @@ public abstract class FunctionJob extends ExperimentSetJob {
 
         data = clustering.getData();
         size = data.size();
-        if (size > 1) {
-          tasks = new Future[size];
-          for (i = size; (--i) >= 0;) {
-            tasks[i] = Execute.parallel(//
-                new __MakeFunctions(data.get(i), logger));
-          }
-          functions = new ExperimentSetFunctions[size];
-          size = Execute.join(tasks, functions, 0, true);
-          if (size < functions.length) {
-            temp = new ExperimentSetFunctions[size];
-            System.arraycopy(functions, 0, temp, 0, size);
-            functions = temp;
-          }
-          break computeFunctions;
-        }
 
-        // clustering with size 1 == original data, fallthrough
+        tasks = new Future[size];
+        for (i = size; (--i) >= 0;) {
+          tasks[i] = Execute.parallel(//
+              new __MakeFunctions(data.get(i), logger));
+        }
+        functions = new ExperimentSetFunctions[size];
+        size = Execute.join(tasks, functions, 0, true);
+        if (size < functions.length) {
+          temp = new ExperimentSetFunctions[size];
+          System.arraycopy(functions, 0, temp, 0, size);
+          functions = temp;
+        }
+        break computeFunctions;
       }
+
       clustering = null;
       experimentSetFunctions = this._makeFunctions(selected, null, logger);
       if (experimentSetFunctions == null) {
