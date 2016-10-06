@@ -2,6 +2,7 @@ package org.optimizationBenchmarking.evaluator.evaluation.impl.all.grouping;
 
 import java.util.logging.Logger;
 
+import org.optimizationBenchmarking.evaluator.attributes.OnlySharedInstances;
 import org.optimizationBenchmarking.evaluator.attributes.clusters.ClustererLoader;
 import org.optimizationBenchmarking.evaluator.attributes.clusters.IClustering;
 import org.optimizationBenchmarking.evaluator.data.spec.Attribute;
@@ -46,7 +47,8 @@ final class _GroupingJob extends ExperimentSetJob {
       final ISectionContainer sectionContainer, final Logger logger) {
     final IClustering result;
 
-    result = this.m_grouper.get(data, logger);
+    result = this.m_grouper.get(//
+        OnlySharedInstances.INSTANCE.get(data, logger), logger);
 
     try (final ISection section = sectionContainer.section(null)) {
       try (final IComplexText title = section.title()) {
